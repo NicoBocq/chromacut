@@ -1,4 +1,4 @@
-import { Layers } from 'lucide-react';
+import { Scissors } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -30,14 +30,27 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center">
-            <Layers className="w-5 h-5 text-primary" />
+        <div className="space-y-3">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5">
+            <div className="relative">
+              <div className="w-9 h-9 rounded-lg bg-linear-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/25">
+                <Scissors className="w-4.5 h-4.5 text-primary-foreground" />
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-background rounded-full flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              </div>
+            </div>
+            <div>
+              <h1 className="font-bold text-lg tracking-tight leading-none">
+                Chroma<span className="text-primary">cut</span>
+              </h1>
+            </div>
           </div>
-          <div>
-            <h1 className="font-bold text-base tracking-tight">Chroma Studio</h1>
-            <p className="text-xs text-muted-foreground">Background remover</p>
-          </div>
+          {/* Tagline */}
+          <p className="text-[11px] text-muted-foreground pl-0.5">
+            Generate → Edit → <span className="text-primary font-medium">Profit</span>
+          </p>
         </div>
       </SidebarHeader>
 

@@ -1,13 +1,26 @@
-import { Download, Undo2, Redo2, Eraser, Crop as CropIcon, ZoomIn, ZoomOut, Pipette } from 'lucide-react';
+import { Download, Undo2, Redo2, Eraser, Crop as CropIcon, ZoomIn, ZoomOut, Pipette, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { ColorPicker } from '@/components/ColorPicker';
 import { cn } from '@/lib/utils';
 import type { ChromaSettings } from '@/store/useStore';
 
 type Tool = 'crop' | 'eraser';
+
+interface ExportSize {
+  label: string;
+  scale?: number;
+  size?: number;
+}
 
 interface ToolbarProps {
   tool: Tool;
@@ -23,7 +36,9 @@ interface ToolbarProps {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
-  onDownload: () => void;
+  onDownload: (scale?: number, targetSize?: number) => void;
+  exportSizes: ExportSize[];
+  imageDimensions: { width: number; height: number } | null;
 }
 
 export function Toolbar({
@@ -41,9 +56,11 @@ export function Toolbar({
   canUndo,
   canRedo,
   onDownload,
+  exportSizes,
+  imageDimensions,
 }: ToolbarProps) {
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2">
       {/* Main Toolbar */}
       <div className="flex items-center gap-1 bg-card backdrop-blur-xl rounded-2xl p-2 shadow-lg shadow-black/5 border border-border">
         {/* Chroma Key Settings */}
@@ -172,9 +189,42 @@ export function Toolbar({
 
         <Separator orientation="vertical" className="h-6 mx-1" />
 
-        <Button size="sm" className="h-8" onClick={onDownload}>
-          <Download className="w-4 h-4" />
-        </Button>
+        {/* Export with size options */}
+        <div className="flex items-center">
+          <Button size="sm" className="h-8 rounded-r-none" onClick={() => onDownload()}>
+            <Download className="w-4 h-4" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="h-8 px-1.5 rounded-l-none border-l border-primary-foreground/20">
+                <ChevronDown className="w-3.5 h-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[140px]">
+              {imageDimensions && (
+                <>
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    Current: {imageDimensions.width}×{imageDimensions.height}
+                  </div>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              {exportSizes.map((size) => (
+                <DropdownMenuItem 
+                  key={size.label}
+                  onClick={() => onDownload(size.scale, size.size)}
+                >
+                  {size.label}
+                  {imageDimensions && size.scale && (
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {Math.round(imageDimensions.width * size.scale)}×{Math.round(imageDimensions.height * size.scale)}
+                    </span>
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Secondary Toolbar - Eraser Options */}

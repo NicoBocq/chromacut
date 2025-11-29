@@ -38,6 +38,7 @@ export function Editor({
   const [outputUrl, setOutputUrl] = useState(imageUrl);
   const [isDrawing, setIsDrawing] = useState(false);
   const [showCursor, setShowCursor] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
   
   // Undo/Redo history
   const [history, setHistory] = useState<string[]>([imageUrl]);
@@ -109,26 +110,86 @@ export function Editor({
   }, [imageUrl, fileName]);
 
   useEffect(() => {
-    if (tool === 'eraser' && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      img.src = outputUrl;
-      img.onload = () => {
+    // Load image dimensions
+    const img = new Image();
+    img.src = outputUrl;
+    img.onload = () => {
+      setImageDimensions({ width: img.width, height: img.height });
+      if (tool === 'eraser' && canvasRef.current) {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
         canvas.width = img.width;
         canvas.height = img.height;
         ctx?.drawImage(img, 0, 0);
-      };
-    }
+      }
+    };
   }, [tool, outputUrl]);
 
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = outputUrl;
-    link.download = `${exportName}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const exportSizes = [
+    { label: 'Original', scale: 1 },
+    { label: '2x', scale: 2 },
+    { label: '0.5x', scale: 0.5 },
+    { label: '0.25x', scale: 0.25 },
+    { label: '64px', size: 64 },
+    { label: '128px', size: 128 },
+    { label: '256px', size: 256 },
+    { label: '512px', size: 512 },
+  ];
+
+  const handleDownload = (scale?: number, targetSize?: number) => {
+    const img = new Image();
+    img.src = outputUrl;
+    img.onload = () => {
+      let newWidth = img.width;
+      let newHeight = img.height;
+
+      if (targetSize) {
+        // Fit to target size (longest side)
+        const ratio = img.width / img.height;
+        if (ratio > 1) {
+          newWidth = targetSize;
+          newHeight = Math.round(targetSize / ratio);
+        } else {
+          newHeight = targetSize;
+          newWidth = Math.round(targetSize * ratio);
+        }
+      } else if (scale && scale !== 1) {
+        newWidth = Math.round(img.width * scale);
+        newHeight = Math.round(img.height * scale);
+      }
+
+      if (newWidth === img.width && newHeight === img.height) {
+        // No resize needed
+        const link = document.createElement('a');
+        link.href = outputUrl;
+        link.download = `${exportName}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+
+      // Resize
+      const canvas = document.createElement('canvas');
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, newWidth, newHeight);
+      
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${exportName}_${newWidth}x${newHeight}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+      }, 'image/png');
+    };
   };
 
   const getVisibleBoundingBox = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
@@ -279,85 +340,107 @@ export function Editor({
         canUndo={canUndo}
         canRedo={canRedo}
         onDownload={handleDownload}
+        exportSizes={exportSizes}
+        imageDimensions={imageDimensions}
       />
       
       {/* Canvas Area */}
       <div className="flex-1 overflow-auto no-scrollbar checkerboard flex items-center justify-center p-8">
         {imageUrl && (
           tool === 'eraser' ? (
-            <div 
-              role="application"
-              className="relative shadow-2xl rounded-xl overflow-hidden ring-1 ring-border/50 transition-transform duration-200"
-              style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center' }}
-              onMouseEnter={() => setShowCursor(true)}
-              onMouseLeave={() => setShowCursor(false)}
-            >
-              <canvas
-                ref={canvasRef}
-                onMouseDown={startErasing}
-                onMouseUp={stopErasing}
-                onMouseLeave={stopErasing}
-                onMouseMove={(e) => {
-                  if (cursorRef.current) {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    cursorRef.current.style.transform = `translate(${x - brushSize / 2}px, ${y - brushSize / 2}px)`;
-                  }
-                  handleEraseMove(e);
-                }}
-                onTouchStart={startErasing}
-                onTouchEnd={stopErasing}
-                onTouchMove={handleEraseMove}
-                className="max-w-full max-h-[70vh] cursor-none touch-none block"
-              />
-              {/* Brush cursor - using transform for smooth movement */}
-              <div
-                ref={cursorRef}
-                className="pointer-events-none absolute top-0 left-0 border-2 border-primary bg-primary/20 rounded-full"
-                style={{
-                  width: brushSize,
-                  height: brushSize,
-                  opacity: showCursor ? 1 : 0,
-                }}
-              />
+            <div className="relative">
+              <div 
+                role="application"
+                className="relative shadow-2xl rounded-xl overflow-hidden ring-1 ring-border/50 transition-transform duration-200"
+                style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center' }}
+                onMouseEnter={() => setShowCursor(true)}
+                onMouseLeave={() => setShowCursor(false)}
+              >
+                <canvas
+                  ref={canvasRef}
+                  onMouseDown={startErasing}
+                  onMouseUp={stopErasing}
+                  onMouseLeave={stopErasing}
+                  onMouseMove={(e) => {
+                    if (cursorRef.current) {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const x = e.clientX - rect.left;
+                      const y = e.clientY - rect.top;
+                      cursorRef.current.style.transform = `translate(${x - brushSize / 2}px, ${y - brushSize / 2}px)`;
+                    }
+                    handleEraseMove(e);
+                  }}
+                  onTouchStart={startErasing}
+                  onTouchEnd={stopErasing}
+                  onTouchMove={handleEraseMove}
+                  className="max-w-full max-h-[70vh] cursor-none touch-none block"
+                />
+                {/* Brush cursor - using transform for smooth movement */}
+                <div
+                  ref={cursorRef}
+                  className="pointer-events-none absolute top-0 left-0 border-2 border-primary bg-primary/20 rounded-full"
+                  style={{
+                    width: brushSize,
+                    height: brushSize,
+                    opacity: showCursor ? 1 : 0,
+                  }}
+                />
+              </div>
+              {/* Dimensions - outside zoom, fixed size */}
+              {imageDimensions && (
+                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-10">
+                  <span className="text-xs font-mono text-foreground/60 bg-background/80 backdrop-blur-sm px-2 py-1 rounded border border-border/50 shadow-sm whitespace-nowrap">
+                    {imageDimensions.width} × {imageDimensions.height}
+                  </span>
+                </div>
+              )}
             </div>
           ) : (
-            <div 
-              className="relative shadow-2xl rounded-xl overflow-hidden ring-1 ring-border/50 transition-transform duration-200"
-              style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center' }}
-            >
-              <ReactCrop
-                crop={crop}
-                onChange={(_: PixelCrop, percentCrop: Crop) => setCrop(percentCrop)}
-                onComplete={(c: PixelCrop) => setCompletedCrop(c)}
-                className="block"
+            <div className="relative">
+              <div 
+                className="relative shadow-2xl rounded-xl overflow-hidden ring-1 ring-border/50 transition-transform duration-200"
+                style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center' }}
               >
-                <img
-                  ref={imgRef}
-                  alt="Edit"
-                  src={outputUrl}
-                  className="max-w-full max-h-[70vh] block"
-                />
-              </ReactCrop>
-
-              {/* Floating Create Layer button - positioned next to selection */}
-              {completedCrop && completedCrop.width > 0 && completedCrop.height > 0 && (
-                <div 
-                  className="absolute z-20"
-                  style={{
-                    left: `${completedCrop.x + completedCrop.width + 8}px`,
-                    top: `${completedCrop.y}px`,
-                  }}
+                <ReactCrop
+                  crop={crop}
+                  onChange={(_: PixelCrop, percentCrop: Crop) => setCrop(percentCrop)}
+                  onComplete={(c: PixelCrop) => setCompletedCrop(c)}
+                  className="block"
                 >
-                  <Button
-                    size="sm"
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg whitespace-nowrap transition-all duration-200"
-                    onClick={applyCrop}
+                  <img
+                    ref={imgRef}
+                    alt="Edit"
+                    src={outputUrl}
+                    className="max-w-full max-h-[70vh] block"
+                  />
+                </ReactCrop>
+
+                {/* Floating Create Layer button - positioned next to selection */}
+                {completedCrop && completedCrop.width > 0 && completedCrop.height > 0 && (
+                  <div 
+                    className="absolute z-20"
+                    style={{
+                      left: `${completedCrop.x + completedCrop.width + 8}px`,
+                      top: `${completedCrop.y}px`,
+                    }}
                   >
-                    <Layers className="w-3.5 h-3.5 mr-1.5" />
-                    {isLayer ? 'Update' : 'Create Layer'}
-                  </Button>
+                    <Button
+                      size="sm"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg whitespace-nowrap transition-all duration-200"
+                      onClick={applyCrop}
+                    >
+                      <Layers className="w-3.5 h-3.5 mr-1.5" />
+                      {isLayer ? 'Update' : 'Create Layer'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {/* Dimensions - outside zoom, fixed size */}
+              {imageDimensions && (
+                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-10">
+                  <span className="text-xs font-mono text-foreground/60 bg-background/80 backdrop-blur-sm px-2 py-1 rounded border border-border/50 shadow-sm whitespace-nowrap">
+                    {imageDimensions.width} × {imageDimensions.height}
+                  </span>
                 </div>
               )}
             </div>

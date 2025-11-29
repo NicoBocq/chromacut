@@ -54,20 +54,9 @@ interface Store {
 
 const generateId = () => Math.random().toString(36).substring(7);
 
-// Default image
-const defaultItem: ImageItem = {
-  id: 'default',
-  file: null,
-  status: 'completed',
-  originalUrl: '/src/assets/generated.png',
-  processedUrl: '/src/assets/generated.png',
-  layers: [],
-  isDefault: true
-};
-
 export const useStore = create<Store>((set, get) => ({
-  items: [defaultItem],
-  selectedId: 'default',
+  items: [],
+  selectedId: null,
   selectedLayerId: null,
   chromaSettings: {
     color: '#00ff00',
@@ -90,7 +79,7 @@ export const useStore = create<Store>((set, get) => ({
     }));
     
     set(state => ({
-      items: [...state.items.filter(i => !i.isDefault), ...newItems],
+      items: [...state.items, ...newItems],
       selectedId: newItems[0]?.id ?? state.selectedId,
       selectedLayerId: null
     }));
@@ -99,19 +88,18 @@ export const useStore = create<Store>((set, get) => ({
   removeItem: (id) => {
     const state = get();
     const item = state.items.find(i => i.id === id);
-    if (item && !item.isDefault) {
+    if (item) {
       URL.revokeObjectURL(item.originalUrl);
       if (item.processedUrl) URL.revokeObjectURL(item.processedUrl);
       for (const l of item.layers) URL.revokeObjectURL(l.url);
     }
     
     const newItems = state.items.filter(i => i.id !== id);
-    const needsDefault = newItems.length === 0;
     
     set({
-      items: needsDefault ? [defaultItem] : newItems,
+      items: newItems,
       selectedId: state.selectedId === id 
-        ? (needsDefault ? 'default' : newItems[0]?.id ?? null)
+        ? (newItems[0]?.id ?? null)
         : state.selectedId,
       selectedLayerId: state.selectedId === id ? null : state.selectedLayerId
     });

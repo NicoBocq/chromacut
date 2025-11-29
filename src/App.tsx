@@ -35,7 +35,16 @@ function App() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="bg-canvas relative">
-        <SidebarTrigger className="absolute top-4 left-4 z-20" />
+        {/* Credit link */}
+        <a 
+          href="https://1h12.com" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="fixed bottom-4 right-4 z-50 px-3 py-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
+        >
+          1h12.com
+        </a>
+        <SidebarTrigger />
         {selectedItem && selectedItem.status === 'completed' ? (
           <Editor
             key={selectedLayerId || selectedItem.id}
@@ -68,8 +77,58 @@ function App() {
             </div>
           </div>
         ) : (
-          <div className="flex-1 h-full flex flex-col items-center justify-center gap-6">
-            <Dropzone onDrop={addFiles} compact={false} />
+          <div className="flex-1 h-full flex flex-col items-center justify-center p-8">
+            <div className="max-w-lg text-center space-y-8">
+              {/* Hero */}
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  Chroma Key Tool
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  Turn AI generations into<br />
+                  <span className="text-primary">transparent PNGs</span>
+                </h2>
+                <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto">
+                  Remove colored backgrounds instantly with chroma key. 
+                  Perfect for cleaning up AI-generated images.
+                </p>
+              </div>
+
+              {/* Dropzone */}
+              <Dropzone onDrop={addFiles} compact={false} />
+
+              {/* Steps with preview placeholders */}
+              <div className="flex items-stretch justify-center gap-4">
+                <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 flex-1 max-w-[140px]">
+                  <div className="w-16 h-16 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden">
+                    <img src="/steps/step1.png" alt="Step 1" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-medium">1. Import</p>
+                    <p className="text-[10px] text-muted-foreground">Drop your image</p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 flex-1 max-w-[140px]">
+                  <div className="w-16 h-16 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden">
+                    <img src="/steps/step2.png" alt="Step 2" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-medium">2. Chroma</p>
+                    <p className="text-[10px] text-muted-foreground">Remove background</p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 flex-1 max-w-[140px]">
+                  <div className="w-16 h-16 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden checkerboard">
+                    <img src="/steps/step3.png" alt="Step 3" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-medium">3. Export</p>
+                    <p className="text-[10px] text-muted-foreground">Transparent PNG</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </SidebarInset>
