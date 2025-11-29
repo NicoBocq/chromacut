@@ -5,7 +5,7 @@ import 'react-image-crop/dist/ReactCrop.css';
 import { Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Toolbar } from '@/components/Toolbar';
-import type { ChromaSettings } from '@/store/useStore';
+import { useStore, type ChromaSettings } from '@/store/useStore';
 
 interface EditorProps {
   imageUrl: string;
@@ -15,10 +15,7 @@ interface EditorProps {
   chromaSettings: ChromaSettings;
   onChromaSettingsChange: (settings: Partial<ChromaSettings>) => void;
   onApplyChroma: () => void;
-  onReprocess: () => void;
 }
-
-type Tool = 'crop' | 'eraser';
 
 export function Editor({ 
   imageUrl, 
@@ -27,35 +24,87 @@ export function Editor({
   isLayer,
   chromaSettings,
   onChromaSettingsChange,
-  onApplyChroma,
-  onReprocess
+  onApplyChroma
 }: EditorProps) {
-  const [tool, setTool] = useState<Tool>('crop');
+  const { editorSettings, updateEditorSettings } = useStore();
+  const { tool, zoom, brushSize } = editorSettings;
+  
+  const setTool = (t: typeof tool) => updateEditorSettings({ tool: t });
+  const setZoom = (z: number) => updateEditorSettings({ zoom: z });
+  const setBrushSize = (s: number) => updateEditorSettings({ brushSize: s });
+
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [outputUrl, setOutputUrl] = useState(imageUrl);
-  const [zoom, setZoom] = useState(100);
-  const [brushSize, setBrushSize] = useState(20);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [showCursor, setShowCursor] = useState(false);
+  
+  // Undo/Redo history
+  const [history, setHistory] = useState<string[]>([imageUrl]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const maxHistory = 10;
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
   // Export name is derived from fileName (layer name)
   const exportName = fileName.replace(/\.[^/.]+$/, '');
 
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
   const prevFileNameRef = useRef(fileName);
 
+  // Add to history
+  const pushHistory = (url: string) => {
+    setHistory(prev => {
+      // Remove any redo states
+      const newHistory = prev.slice(0, historyIndex + 1);
+      // Add new state
+      newHistory.push(url);
+      // Limit history size
+      if (newHistory.length > maxHistory) {
+        // Revoke old URL to free memory
+        URL.revokeObjectURL(newHistory[0]);
+        newHistory.shift();
+        return newHistory;
+      }
+      return newHistory;
+    });
+    setHistoryIndex(prev => Math.min(prev + 1, maxHistory - 1));
+  };
+
+  const handleUndo = () => {
+    if (canUndo) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setOutputUrl(history[newIndex]);
+    }
+  };
+
+  const handleRedo = () => {
+    if (canRedo) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setOutputUrl(history[newIndex]);
+    }
+  };
+
   // Update outputUrl when imageUrl changes (chroma processing)
-  // But only reset zoom/crop when switching to a different file
   useEffect(() => {
-    setOutputUrl(imageUrl);
-    
-    // Only reset zoom and crop when switching to a different file
     const isNewFile = prevFileNameRef.current !== fileName;
     if (isNewFile) {
+      // Reset everything for new file
+      setOutputUrl(imageUrl);
       setCrop(undefined);
       setCompletedCrop(undefined);
-      setZoom(100);
+      setHistory([imageUrl]);
+      setHistoryIndex(0);
       prevFileNameRef.current = fileName;
+    } else if (imageUrl !== outputUrl && imageUrl !== history[historyIndex]) {
+      // Chroma reprocess - add to history
+      setOutputUrl(imageUrl);
+      pushHistory(imageUrl);
     }
   }, [imageUrl, fileName]);
 
@@ -80,12 +129,6 @@ export function Editor({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handleReset = () => {
-    setOutputUrl(imageUrl);
-    setCrop(undefined);
-    setCompletedCrop(undefined);
   };
 
   const getVisibleBoundingBox = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
@@ -163,6 +206,7 @@ export function Editor({
         } else {
           const newUrl = URL.createObjectURL(blob);
           setOutputUrl(newUrl);
+          pushHistory(newUrl);
         }
         setCrop(undefined);
       }
@@ -207,6 +251,7 @@ export function Editor({
           } else {
             const newUrl = URL.createObjectURL(blob);
             setOutputUrl(newUrl);
+            pushHistory(newUrl);
           }
         }
       }, 'image/png');
@@ -229,29 +274,52 @@ export function Editor({
         chromaSettings={chromaSettings}
         onChromaSettingsChange={onChromaSettingsChange}
         onApplyChroma={onApplyChroma}
-        onReprocess={onReprocess}
-        onReset={handleReset}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
         onDownload={handleDownload}
       />
       
       {/* Canvas Area */}
-      <div className="flex-1 overflow-auto checkerboard flex items-center justify-center p-8">
+      <div className="flex-1 overflow-auto no-scrollbar checkerboard flex items-center justify-center p-8">
         {imageUrl && (
           tool === 'eraser' ? (
             <div 
+              role="application"
               className="relative shadow-2xl rounded-xl overflow-hidden ring-1 ring-border/50 transition-transform duration-200"
               style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center' }}
+              onMouseEnter={() => setShowCursor(true)}
+              onMouseLeave={() => setShowCursor(false)}
             >
               <canvas
                 ref={canvasRef}
                 onMouseDown={startErasing}
                 onMouseUp={stopErasing}
                 onMouseLeave={stopErasing}
-                onMouseMove={handleEraseMove}
+                onMouseMove={(e) => {
+                  if (cursorRef.current) {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    cursorRef.current.style.transform = `translate(${x - brushSize / 2}px, ${y - brushSize / 2}px)`;
+                  }
+                  handleEraseMove(e);
+                }}
                 onTouchStart={startErasing}
                 onTouchEnd={stopErasing}
                 onTouchMove={handleEraseMove}
-                className="max-w-full max-h-[70vh] cursor-crosshair touch-none block"
+                className="max-w-full max-h-[70vh] cursor-none touch-none block"
+              />
+              {/* Brush cursor - using transform for smooth movement */}
+              <div
+                ref={cursorRef}
+                className="pointer-events-none absolute top-0 left-0 border-2 border-primary bg-primary/20 rounded-full"
+                style={{
+                  width: brushSize,
+                  height: brushSize,
+                  opacity: showCursor ? 1 : 0,
+                }}
               />
             </div>
           ) : (
@@ -263,6 +331,7 @@ export function Editor({
                 crop={crop}
                 onChange={(_: PixelCrop, percentCrop: Crop) => setCrop(percentCrop)}
                 onComplete={(c: PixelCrop) => setCompletedCrop(c)}
+                className="block"
               >
                 <img
                   ref={imgRef}
@@ -283,7 +352,7 @@ export function Editor({
                 >
                   <Button
                     size="sm"
-                    className="bg-(--brand-green) hover:bg-(--brand-green)/90 shadow-lg whitespace-nowrap transition-all duration-200"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg whitespace-nowrap transition-all duration-200"
                     onClick={applyCrop}
                   >
                     <Layers className="w-3.5 h-3.5 mr-1.5" />

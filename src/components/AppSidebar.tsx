@@ -29,14 +29,14 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader>
-        <div className="flex items-center gap-3 px-2 py-1">
-          <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-(--brand-purple) flex items-center justify-center shadow-sm">
-            <Layers className="w-4 h-4 text-white" />
+      <SidebarHeader className="p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center">
+            <Layers className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="font-semibold text-sm tracking-tight">Chroma Studio</h1>
-            <p className="text-[10px] text-muted-foreground">Background remover</p>
+            <h1 className="font-bold text-base tracking-tight">Chroma Studio</h1>
+            <p className="text-xs text-muted-foreground">Background remover</p>
           </div>
         </div>
       </SidebarHeader>

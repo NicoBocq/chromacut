@@ -1,4 +1,4 @@
-import { Download, RotateCcw, Eraser, Crop as CropIcon, ZoomIn, ZoomOut, Pipette, RefreshCw } from 'lucide-react';
+import { Download, Undo2, Redo2, Eraser, Crop as CropIcon, ZoomIn, ZoomOut, Pipette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -19,8 +19,10 @@ interface ToolbarProps {
   chromaSettings: ChromaSettings;
   onChromaSettingsChange: (settings: Partial<ChromaSettings>) => void;
   onApplyChroma: () => void;
-  onReprocess: () => void;
-  onReset: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
   onDownload: () => void;
 }
 
@@ -34,13 +36,16 @@ export function Toolbar({
   chromaSettings,
   onChromaSettingsChange,
   onApplyChroma,
-  onReprocess,
-  onReset,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   onDownload,
 }: ToolbarProps) {
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-      <div className="flex items-center gap-1 bg-card/95 backdrop-blur-md rounded-xl p-1.5 shadow-xl border border-border/50">
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+      {/* Main Toolbar */}
+      <div className="flex items-center gap-1 bg-card backdrop-blur-xl rounded-2xl p-2 shadow-lg shadow-black/5 border border-border">
         {/* Chroma Key Settings */}
         <div className="flex items-center gap-2 px-2">
           <Tooltip>
@@ -73,14 +78,6 @@ export function Toolbar({
             <span className="text-xs w-6 text-right font-mono">{chromaSettings.tolerance}</span>
           </div>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onReprocess}>
-                <RefreshCw className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Reprocess all images</TooltipContent>
-          </Tooltip>
         </div>
 
         <Separator orientation="vertical" className="h-6 mx-1" />
@@ -116,25 +113,6 @@ export function Toolbar({
           </Tooltip>
         </div>
 
-        {/* Eraser Size */}
-        {tool === 'eraser' && (
-          <>
-            <Separator orientation="vertical" className="h-6 mx-1" />
-            <div className="flex items-center gap-2 px-2">
-              <span className="text-xs text-muted-foreground">Size</span>
-              <Slider
-                value={[brushSize]}
-                onValueChange={([v]: number[]) => setBrushSize(v)}
-                min={5}
-                max={100}
-                step={1}
-                className="w-20"
-              />
-              <span className="text-xs w-6 text-right">{brushSize}</span>
-            </div>
-          </>
-        )}
-
         <Separator orientation="vertical" className="h-6 mx-1" />
 
         {/* Zoom */}
@@ -160,22 +138,66 @@ export function Toolbar({
 
         <Separator orientation="vertical" className="h-6 mx-1" />
 
-        {/* Actions */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onReset}>
-              <RotateCcw className="w-4 h-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Reset</TooltipContent>
-        </Tooltip>
+        {/* Undo/Redo */}
+        <div className="flex items-center gap-0.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0" 
+                onClick={onUndo}
+                disabled={!canUndo}
+              >
+                <Undo2 className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Undo (⌘Z)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0" 
+                onClick={onRedo}
+                disabled={!canRedo}
+              >
+                <Redo2 className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Redo (⌘⇧Z)</TooltipContent>
+          </Tooltip>
+        </div>
 
         <Separator orientation="vertical" className="h-6 mx-1" />
 
-          <Button size="sm" className="h-8" onClick={onDownload}>
-            <Download className="w-4 h-4" />
-          </Button>
+        <Button size="sm" className="h-8" onClick={onDownload}>
+          <Download className="w-4 h-4" />
+        </Button>
+      </div>
 
+      {/* Secondary Toolbar - Eraser Options */}
+      <div 
+        className={cn(
+          "flex items-center gap-3 bg-card backdrop-blur-xl rounded-xl px-4 py-2 shadow-lg shadow-black/5 border border-border",
+          "transition-all duration-300 ease-out",
+          tool === 'eraser' 
+            ? "opacity-100 translate-y-0" 
+            : "opacity-0 -translate-y-2 pointer-events-none"
+        )}
+      >
+        <Eraser className="w-4 h-4 text-muted-foreground" />
+        <span className="text-xs text-muted-foreground">Brush size</span>
+        <Slider
+          value={[brushSize]}
+          onValueChange={([v]: number[]) => setBrushSize(v)}
+          min={5}
+          max={100}
+          step={1}
+          className="w-32"
+        />
+        <span className="text-xs w-8 text-right font-mono">{brushSize}px</span>
       </div>
     </div>
   );

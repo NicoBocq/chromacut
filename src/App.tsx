@@ -14,7 +14,6 @@ function App() {
     addLayer,
     updateLayer,
     processItem,
-    reprocessAll,
     updateChromaSettings
   } = useStore();
 
@@ -47,7 +46,6 @@ function App() {
             chromaSettings={chromaSettings}
             onChromaSettingsChange={updateChromaSettings}
             onApplyChroma={() => processItem(selectedItem.id)}
-            onReprocess={reprocessAll}
           />
         ) : selectedItem ? (
           <div className="flex-1 h-full flex items-center justify-center">

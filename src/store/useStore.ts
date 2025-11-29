@@ -23,11 +23,20 @@ export interface ChromaSettings {
   tolerance: number;
 }
 
+export type Tool = 'crop' | 'eraser';
+
+export interface EditorSettings {
+  tool: Tool;
+  zoom: number;
+  brushSize: number;
+}
+
 interface Store {
   items: ImageItem[];
   selectedId: string | null;
   selectedLayerId: string | null;
   chromaSettings: ChromaSettings;
+  editorSettings: EditorSettings;
   
   // Actions
   addFiles: (files: File[]) => void;
@@ -40,6 +49,7 @@ interface Store {
   removeLayer: (itemId: string, layerId: string) => void;
   renameLayer: (itemId: string, layerId: string, name: string) => void;
   updateChromaSettings: (settings: Partial<ChromaSettings>) => void;
+  updateEditorSettings: (settings: Partial<EditorSettings>) => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(7);
@@ -62,6 +72,11 @@ export const useStore = create<Store>((set, get) => ({
   chromaSettings: {
     color: '#00ff00',
     tolerance: 0
+  },
+  editorSettings: {
+    tool: 'crop',
+    zoom: 100,
+    brushSize: 20
   },
 
   addFiles: (files) => {
@@ -207,6 +222,12 @@ export const useStore = create<Store>((set, get) => ({
   updateChromaSettings: (settings) => {
     set(state => ({
       chromaSettings: { ...state.chromaSettings, ...settings }
+    }));
+  },
+
+  updateEditorSettings: (settings) => {
+    set(state => ({
+      editorSettings: { ...state.editorSettings, ...settings }
     }));
   }
 }));
