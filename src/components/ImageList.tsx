@@ -28,10 +28,6 @@ export function ImageList({
   const [editName, setEditName] = useState('');
   const { expandedItems, toggleExpandItem } = useStore();
 
-  const toggleExpand = (id: string) => {
-    toggleExpandItem(id);
-  };
-
   const startEditing = (layerId: string, currentName: string) => {
     setEditingLayerId(layerId);
     setEditName(currentName);
@@ -79,8 +75,8 @@ export function ImageList({
               {/* Expand toggle */}
               {hasLayers ? (
                 <span
-                  onClick={(e) => { e.stopPropagation(); toggleExpand(item.id); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); toggleExpand(item.id); } }}
+                  onClick={(e) => { e.stopPropagation(); toggleExpandItem(item.id); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); toggleExpandItem(item.id); } }}
                   className="p-0.5 hover:bg-muted rounded cursor-pointer"
                   role="button"
                   tabIndex={0}

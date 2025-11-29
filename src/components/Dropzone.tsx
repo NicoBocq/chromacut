@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { ImagePlus, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -9,12 +8,8 @@ interface DropzoneProps {
 }
 
 export function Dropzone({ onDrop, compact = true }: DropzoneProps) {
-  const onDropCallback = useCallback((acceptedFiles: File[]) => {
-    onDrop(acceptedFiles);
-  }, [onDrop]);
-
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: onDropCallback,
+    onDrop,
     accept: {
       'image/*': ['.png', '.jpg', '.jpeg', '.webp']
     }

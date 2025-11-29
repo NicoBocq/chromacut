@@ -100,14 +100,15 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
 
           {/* Custom color input */}
           <div className="flex items-center gap-2">
-            <label className="text-xs text-muted-foreground">Custom:</label>
-            <input
+            <label className="text-xs text-muted-foreground" htmlFor='color-picker-input'>Custom:</label>
+            <input  id='color-picker-input'
               type="color"
               value={value}
               onChange={(e) => onChange(e.target.value)}
               className="w-8 h-8 rounded cursor-pointer border-0 p-0"
             />
-            <input
+            <input 
+              id="hexa-picker-input"
               type="text"
               value={value}
               onChange={(e) => onChange(e.target.value)}

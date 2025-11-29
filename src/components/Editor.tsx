@@ -56,6 +56,8 @@ export function Editor({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const prevFileNameRef = useRef(fileName);
+  const historyRef = useRef(history);
+  historyRef.current = history;
 
   // Add to history
   const pushHistory = (url: string) => {
@@ -93,6 +95,7 @@ export function Editor({
   };
 
   // Update outputUrl when imageUrl changes (chroma processing)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pushHistory is stable (uses state setters only)
   useEffect(() => {
     const isNewFile = prevFileNameRef.current !== fileName;
     if (isNewFile) {
@@ -103,12 +106,27 @@ export function Editor({
       setHistory([imageUrl]);
       setHistoryIndex(0);
       prevFileNameRef.current = fileName;
-    } else if (imageUrl !== outputUrl && imageUrl !== history[historyIndex]) {
-      // Chroma reprocess - add to history
-      setOutputUrl(imageUrl);
-      pushHistory(imageUrl);
+    } else if (imageUrl !== outputUrl) {
+      // Check if this is a new chroma reprocess (not already in history)
+      const currentHistoryUrl = historyRef.current[historyIndex];
+      if (imageUrl !== currentHistoryUrl) {
+        setOutputUrl(imageUrl);
+        pushHistory(imageUrl);
+      }
     }
-  }, [imageUrl, fileName, historyIndex]);
+  }, [imageUrl, fileName, historyIndex, outputUrl]);
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      // Revoke all history URLs except the original imageUrl (managed by parent)
+      for (const url of historyRef.current) {
+        if (url !== imageUrl && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      }
+    };
+  }, [imageUrl]);
 
   useEffect(() => {
     // Load image dimensions
