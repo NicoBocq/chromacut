@@ -1,0 +1,212 @@
+import { create } from 'zustand';
+import { removeColorBackground, removeColorFromUrl } from '@/lib/processor';
+
+export interface Layer {
+  id: string;
+  name: string;
+  url: string;
+}
+
+export interface ImageItem {
+  id: string;
+  file: File | null;
+  status: 'pending' | 'processing' | 'completed' | 'error';
+  originalUrl: string;
+  processedUrl?: string;
+  error?: string;
+  layers: Layer[];
+  isDefault?: boolean;
+}
+
+export interface ChromaSettings {
+  color: string;
+  tolerance: number;
+}
+
+interface Store {
+  items: ImageItem[];
+  selectedId: string | null;
+  selectedLayerId: string | null;
+  chromaSettings: ChromaSettings;
+  
+  // Actions
+  addFiles: (files: File[]) => void;
+  removeItem: (id: string) => void;
+  selectItem: (id: string, layerId?: string | null) => void;
+  processItem: (id: string) => Promise<void>;
+  reprocessAll: () => void;
+  addLayer: (itemId: string, blob: Blob, name: string) => Layer;
+  updateLayer: (itemId: string, layerId: string, blob: Blob) => void;
+  removeLayer: (itemId: string, layerId: string) => void;
+  renameLayer: (itemId: string, layerId: string, name: string) => void;
+  updateChromaSettings: (settings: Partial<ChromaSettings>) => void;
+}
+
+const generateId = () => Math.random().toString(36).substring(7);
+
+// Default image
+const defaultItem: ImageItem = {
+  id: 'default',
+  file: null,
+  status: 'completed',
+  originalUrl: '/src/assets/generated.png',
+  processedUrl: '/src/assets/generated.png',
+  layers: [],
+  isDefault: true
+};
+
+export const useStore = create<Store>((set, get) => ({
+  items: [defaultItem],
+  selectedId: 'default',
+  selectedLayerId: null,
+  chromaSettings: {
+    color: '#00ff00',
+    tolerance: 0
+  },
+
+  addFiles: (files) => {
+    const newItems = files.map(file => ({
+      id: generateId(),
+      file,
+      status: 'completed' as const,
+      originalUrl: URL.createObjectURL(file),
+      processedUrl: URL.createObjectURL(file),
+      layers: []
+    }));
+    
+    set(state => ({
+      items: [...state.items.filter(i => !i.isDefault), ...newItems],
+      selectedId: newItems[0]?.id ?? state.selectedId,
+      selectedLayerId: null
+    }));
+  },
+
+  removeItem: (id) => {
+    const state = get();
+    const item = state.items.find(i => i.id === id);
+    if (item && !item.isDefault) {
+      URL.revokeObjectURL(item.originalUrl);
+      if (item.processedUrl) URL.revokeObjectURL(item.processedUrl);
+      for (const l of item.layers) URL.revokeObjectURL(l.url);
+    }
+    
+    const newItems = state.items.filter(i => i.id !== id);
+    const needsDefault = newItems.length === 0;
+    
+    set({
+      items: needsDefault ? [defaultItem] : newItems,
+      selectedId: state.selectedId === id 
+        ? (needsDefault ? 'default' : newItems[0]?.id ?? null)
+        : state.selectedId,
+      selectedLayerId: state.selectedId === id ? null : state.selectedLayerId
+    });
+  },
+
+  selectItem: (id, layerId = null) => {
+    set({ selectedId: id, selectedLayerId: layerId });
+  },
+
+  processItem: async (id) => {
+    const state = get();
+    const item = state.items.find(i => i.id === id);
+    if (!item) return;
+
+    // Don't set processing status to avoid flicker - keep showing current image
+    const oldUrl = item.processedUrl;
+
+    try {
+      // Use file if available, otherwise process from URL (for default image)
+      const blob = item.file 
+        ? await removeColorBackground(item.file, get().chromaSettings)
+        : await removeColorFromUrl(item.originalUrl, get().chromaSettings);
+      const url = URL.createObjectURL(blob);
+      
+      // Only update once new image is ready
+      set(state => ({
+        items: state.items.map(i => 
+          i.id === id ? { ...i, status: 'completed' as const, processedUrl: url } : i
+        )
+      }));
+
+      // Revoke old URL after update to free memory
+      if (oldUrl && oldUrl !== item.originalUrl) {
+        URL.revokeObjectURL(oldUrl);
+      }
+    } catch (err) {
+      console.error(err);
+      set(state => ({
+        items: state.items.map(i => 
+          i.id === id ? { ...i, status: 'error' as const, error: 'Failed to process' } : i
+        )
+      }));
+    }
+  },
+
+  reprocessAll: () => {
+    const state = get();
+    for (const item of state.items) {
+      if (item.file && (item.status === 'completed' || item.status === 'error')) {
+        get().processItem(item.id);
+      }
+    }
+  },
+
+  addLayer: (itemId, blob, name) => {
+    const url = URL.createObjectURL(blob);
+    const newLayer: Layer = { id: generateId(), name, url };
+
+    set(state => ({
+      items: state.items.map(item => 
+        item.id === itemId 
+          ? { ...item, layers: [...item.layers, newLayer] }
+          : item
+      ),
+      selectedLayerId: newLayer.id
+    }));
+    
+    return newLayer;
+  },
+
+  updateLayer: (itemId, layerId, blob) => {
+    const url = URL.createObjectURL(blob);
+    set(state => ({
+      items: state.items.map(item => 
+        item.id === itemId 
+          ? { ...item, layers: item.layers.map(l => l.id === layerId ? { ...l, url } : l) }
+          : item
+      )
+    }));
+  },
+
+  removeLayer: (itemId, layerId) => {
+    const state = get();
+    const item = state.items.find(i => i.id === itemId);
+    const layer = item?.layers.find(l => l.id === layerId);
+    if (layer) URL.revokeObjectURL(layer.url);
+
+    set(state => ({
+      items: state.items.map(item => 
+        item.id === itemId 
+          ? { ...item, layers: item.layers.filter(l => l.id !== layerId) }
+          : item
+      ),
+      selectedLayerId: state.selectedLayerId === layerId ? null : state.selectedLayerId
+    }));
+  },
+
+  renameLayer: (itemId, layerId, name) => {
+    set(state => ({
+      items: state.items.map(item => 
+        item.id === itemId 
+          ? { ...item, layers: item.layers.map(l => l.id === layerId ? { ...l, name } : l) }
+          : item
+      )
+    }));
+  },
+
+  updateChromaSettings: (settings) => {
+    set(state => ({
+      chromaSettings: { ...state.chromaSettings, ...settings }
+    }));
+  }
+}));
