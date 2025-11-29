@@ -3,6 +3,7 @@ import type React from 'react';
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Layers } from 'lucide-react';
+import * as Popover from '@radix-ui/react-popover';
 import { Button } from '@/components/ui/button';
 import { Toolbar } from '@/components/Toolbar';
 import { useStore, type ChromaSettings } from '@/store/useStore';
@@ -107,7 +108,7 @@ export function Editor({
       setOutputUrl(imageUrl);
       pushHistory(imageUrl);
     }
-  }, [imageUrl, fileName]);
+  }, [imageUrl, fileName, historyIndex]);
 
   useEffect(() => {
     // Load image dimensions
@@ -415,24 +416,35 @@ export function Editor({
                   />
                 </ReactCrop>
 
-                {/* Floating Create Layer button - positioned next to selection */}
+                {/* Floating Create Layer button with collision detection */}
                 {completedCrop && completedCrop.width > 0 && completedCrop.height > 0 && (
-                  <div 
-                    className="absolute z-20"
-                    style={{
-                      left: `${completedCrop.x + completedCrop.width + 8}px`,
-                      top: `${completedCrop.y}px`,
-                    }}
-                  >
-                    <Button
-                      size="sm"
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg whitespace-nowrap transition-all duration-200"
-                      onClick={applyCrop}
-                    >
-                      <Layers className="w-3.5 h-3.5 mr-1.5" />
-                      {isLayer ? 'Update' : 'Create Layer'}
-                    </Button>
-                  </div>
+                  <Popover.Root open>
+                    <Popover.Anchor 
+                      className="absolute"
+                      style={{
+                        left: `${completedCrop.x + completedCrop.width / 2}px`,
+                        top: `${completedCrop.y + completedCrop.height}px`,
+                      }}
+                    />
+                    <Popover.Portal>
+                      <Popover.Content
+                        side="bottom"
+                        align="center"
+                        sideOffset={8}
+                        collisionPadding={16}
+                        className="z-50"
+                      >
+                        <Button
+                          size="sm"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg whitespace-nowrap transition-all duration-200"
+                          onClick={applyCrop}
+                        >
+                          <Layers className="w-3.5 h-3.5 mr-1.5" />
+                          {isLayer ? 'Update' : 'Create Layer'}
+                        </Button>
+                      </Popover.Content>
+                    </Popover.Portal>
+                  </Popover.Root>
                 )}
               </div>
               {/* Dimensions - outside zoom, fixed size */}

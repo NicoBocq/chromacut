@@ -37,6 +37,7 @@ interface Store {
   selectedLayerId: string | null;
   chromaSettings: ChromaSettings;
   editorSettings: EditorSettings;
+  expandedItems: Set<string>;
   
   // Actions
   addFiles: (files: File[]) => void;
@@ -50,6 +51,8 @@ interface Store {
   renameLayer: (itemId: string, layerId: string, name: string) => void;
   updateChromaSettings: (settings: Partial<ChromaSettings>) => void;
   updateEditorSettings: (settings: Partial<EditorSettings>) => void;
+  toggleExpandItem: (id: string) => void;
+  expandItem: (id: string) => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(7);
@@ -67,6 +70,7 @@ export const useStore = create<Store>((set, get) => ({
     zoom: 100,
     brushSize: 20
   },
+  expandedItems: new Set<string>(),
 
   addFiles: (files) => {
     const newItems = files.map(file => ({
@@ -158,14 +162,19 @@ export const useStore = create<Store>((set, get) => ({
     const url = URL.createObjectURL(blob);
     const newLayer: Layer = { id: generateId(), name, url };
 
-    set(state => ({
-      items: state.items.map(item => 
-        item.id === itemId 
-          ? { ...item, layers: [...item.layers, newLayer] }
-          : item
-      ),
-      selectedLayerId: newLayer.id
-    }));
+    set(state => {
+      const newExpanded = new Set(state.expandedItems);
+      newExpanded.add(itemId); // Expand the item to show new layer
+      return {
+        items: state.items.map(item => 
+          item.id === itemId 
+            ? { ...item, layers: [...item.layers, newLayer] }
+            : item
+        ),
+        selectedLayerId: newLayer.id,
+        expandedItems: newExpanded
+      };
+    });
     
     return newLayer;
   },
@@ -217,5 +226,22 @@ export const useStore = create<Store>((set, get) => ({
     set(state => ({
       editorSettings: { ...state.editorSettings, ...settings }
     }));
+  },
+
+  toggleExpandItem: (id) => {
+    set(state => {
+      const newExpanded = new Set(state.expandedItems);
+      if (newExpanded.has(id)) newExpanded.delete(id);
+      else newExpanded.add(id);
+      return { expandedItems: newExpanded };
+    });
+  },
+
+  expandItem: (id) => {
+    set(state => {
+      const newExpanded = new Set(state.expandedItems);
+      newExpanded.add(id);
+      return { expandedItems: newExpanded };
+    });
   }
 }));

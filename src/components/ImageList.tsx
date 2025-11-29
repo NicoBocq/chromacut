@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Trash2, Layers, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import type { ImageItem } from '@/store/useStore';
+import { useStore, type ImageItem } from '@/store/useStore';
 
 interface ImageListProps {
   items: ImageItem[];
@@ -26,15 +26,10 @@ export function ImageList({
 }: ImageListProps) {
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const { expandedItems, toggleExpandItem } = useStore();
 
   const toggleExpand = (id: string) => {
-    setExpandedItems(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    toggleExpandItem(id);
   };
 
   const startEditing = (layerId: string, currentName: string) => {
