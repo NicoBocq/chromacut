@@ -46,20 +46,19 @@ export async function removeColorBackground(
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       
+      // Pre-calculate squared tolerance to avoid sqrt in loop
+      const toleranceSquared = tolerance * tolerance;
+      const tr = targetColor.r;
+      const tg = targetColor.g;
+      const tb = targetColor.b;
+
       for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
+        const dr = data[i] - tr;
+        const dg = data[i + 1] - tg;
+        const db = data[i + 2] - tb;
         
-        // Calculate color distance (Euclidean distance in RGB space)
-        const distance = Math.sqrt(
-          Math.pow(r - targetColor.r, 2) +
-          Math.pow(g - targetColor.g, 2) +
-          Math.pow(b - targetColor.b, 2)
-        );
-        
-        // If within tolerance, make transparent
-        if (distance <= tolerance) {
+        // Compare squared distances (faster than sqrt)
+        if (dr * dr + dg * dg + db * db <= toleranceSquared) {
           data[i + 3] = 0;
         }
       }
@@ -113,18 +112,19 @@ export async function removeColorFromUrl(
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       
+      // Pre-calculate squared tolerance to avoid sqrt in loop
+      const toleranceSquared = tolerance * tolerance;
+      const tr = targetColor.r;
+      const tg = targetColor.g;
+      const tb = targetColor.b;
+
       for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
+        const dr = data[i] - tr;
+        const dg = data[i + 1] - tg;
+        const db = data[i + 2] - tb;
         
-        const distance = Math.sqrt(
-          (r - targetColor.r) ** 2 +
-          (g - targetColor.g) ** 2 +
-          (b - targetColor.b) ** 2
-        );
-        
-        if (distance <= tolerance) {
+        // Compare squared distances (faster than sqrt)
+        if (dr * dr + dg * dg + db * db <= toleranceSquared) {
           data[i + 3] = 0;
         }
       }
