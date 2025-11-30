@@ -78,56 +78,51 @@ function App() {
           </div>
         ) : (
           <div className="flex-1 h-full flex flex-col items-center justify-center p-8">
-            <div className="max-w-lg text-center space-y-8">
-              {/* Hero */}
-              <div className="space-y-4">
+            <div className="max-w-2xl text-center space-y-6">
+              <div className="space-y-3">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                   Chroma Key Tool
                 </div>
                 <h2 className="text-2xl font-bold tracking-tight">
-                  Turn AI generations into<br />
-                  <span className="text-primary">transparent PNGs</span>
+                  Turn AI generations into <span className="text-primary">transparent PNGs</span>
                 </h2>
-                <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto">
-                  Remove colored backgrounds instantly with chroma key. 
-                  Perfect for cleaning up AI-generated images.
+                <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
+                  Remove colored backgrounds instantly with chroma key. Perfect for cleaning up AI-generated images.
                 </p>
               </div>
 
-              {/* Dropzone */}
-              <Dropzone onDrop={addFiles} compact={false} />
-
-              {/* Steps with preview placeholders */}
-              <div className="flex items-stretch justify-center gap-4">
-                <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 flex-1 max-w-[140px]">
-                  <div className="w-16 h-16 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden">
+              <div className="flex items-stretch justify-center gap-6">
+                <div className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-muted/30 flex-1 max-w-[180px]">
+                  <div className="w-24 h-24 rounded-xl bg-muted/50 flex items-center justify-center overflow-hidden">
                     <img src="/steps/step1.png" alt="Step 1" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   </div>
                   <div className="text-center">
-                    <p className="text-xs font-medium">1. Import</p>
-                    <p className="text-[10px] text-muted-foreground">Drop your image</p>
+                    <p className="text-sm font-medium">1. Import</p>
+                    <p className="text-xs text-muted-foreground">Drop your image</p>
                   </div>
                 </div>
-                <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 flex-1 max-w-[140px]">
-                  <div className="w-16 h-16 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden">
+                <div className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-muted/30 flex-1 max-w-[180px]">
+                  <div className="w-24 h-24 rounded-xl bg-muted/50 flex items-center justify-center overflow-hidden">
                     <img src="/steps/step2.png" alt="Step 2" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   </div>
                   <div className="text-center">
-                    <p className="text-xs font-medium">2. Chroma</p>
-                    <p className="text-[10px] text-muted-foreground">Remove background</p>
+                    <p className="text-sm font-medium">2. Chroma</p>
+                    <p className="text-xs text-muted-foreground">Remove background</p>
                   </div>
                 </div>
-                <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-muted/30 flex-1 max-w-[140px]">
-                  <div className="w-16 h-16 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden checkerboard">
+                <div className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-muted/30 flex-1 max-w-[180px]">
+                  <div className="w-24 h-24 rounded-xl bg-muted/50 flex items-center justify-center overflow-hidden checkerboard">
                     <img src="/steps/step3.png" alt="Step 3" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   </div>
                   <div className="text-center">
-                    <p className="text-xs font-medium">3. Export</p>
-                    <p className="text-[10px] text-muted-foreground">Transparent PNG</p>
+                    <p className="text-sm font-medium">3. Export</p>
+                    <p className="text-xs text-muted-foreground">Transparent PNG</p>
                   </div>
                 </div>
               </div>
+
+              <Dropzone onDrop={addFiles} compact={false} />
             </div>
           </div>
         )}
