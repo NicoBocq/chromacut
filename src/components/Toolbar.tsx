@@ -1,4 +1,4 @@
-import { Download, Undo2, Redo2, Eraser, Crop as CropIcon, ZoomIn, ZoomOut, Pipette, ChevronDown } from 'lucide-react';
+import { Download, Undo2, Redo2, Eraser, Crop as CropIcon, ZoomIn, ZoomOut, Pipette, ChevronDown, PanelLeftOpen, PanelLeftClose } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { ColorPicker } from '@/components/ColorPicker';
+import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import type { ChromaSettings } from '@/store/useStore';
 
@@ -59,16 +60,35 @@ export function Toolbar({
   exportSizes,
   imageDimensions,
 }: ToolbarProps) {
+  const { toggleSidebar, open } = useSidebar();
+
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2">
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 max-w-[calc(100%-2rem)]">
       {/* Main Toolbar */}
-      <div className="flex items-center gap-1 bg-card backdrop-blur-xl rounded-2xl p-2 shadow-lg shadow-black/5 border border-border">
+      <div className="inline-flex items-center gap-1 bg-card/95 backdrop-blur-xl rounded-2xl p-2 shadow-lg shadow-black/5 border border-border">
+        {/* Sidebar toggle */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 shrink-0"
+              onClick={toggleSidebar}
+            >
+              {open ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{open ? 'Hide sidebar' : 'Show sidebar'}</TooltipContent>
+        </Tooltip>
+
+        <Separator orientation="vertical" className="h-6 mx-1" />
+
         {/* Chroma Key Settings */}
         <div className="flex items-center gap-2 px-2">
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-1.5">
-                <Pipette className="w-3.5 h-3.5 text-muted-foreground" />
+                <Pipette className="w-3.5 h-3.5 text-muted-foreground hidden sm:block" />
                 <ColorPicker 
                   value={chromaSettings.color} 
                   onChange={(color) => {
@@ -82,7 +102,7 @@ export function Toolbar({
           </Tooltip>
           
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Tol</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">Tol</span>
             <Slider
               value={[chromaSettings.tolerance]}
               onValueChange={([v]: number[]) => onChromaSettingsChange({ tolerance: v })}
@@ -90,14 +110,13 @@ export function Toolbar({
               min={0}
               max={200}
               step={1}
-              className="w-20"
+              className="w-16 sm:w-20"
             />
             <span className="text-xs w-6 text-right font-mono">{chromaSettings.tolerance}</span>
           </div>
-
         </div>
 
-        <Separator orientation="vertical" className="h-6 mx-1" />
+        <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
 
         {/* Tool Selection */}
         <div className="flex gap-0.5 bg-secondary rounded-md p-0.5">
@@ -130,10 +149,10 @@ export function Toolbar({
           </Tooltip>
         </div>
 
-        <Separator orientation="vertical" className="h-6 mx-1" />
+        <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
 
-        {/* Zoom */}
-        <div className="flex items-center gap-1">
+        {/* Zoom - hidden on mobile */}
+        <div className="hidden sm:flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setZoom(Math.max(10, zoom - 25))}>
@@ -153,10 +172,10 @@ export function Toolbar({
           </Tooltip>
         </div>
 
-        <Separator orientation="vertical" className="h-6 mx-1" />
+        <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
 
-        {/* Undo/Redo */}
-        <div className="flex items-center gap-0.5">
+        {/* Undo/Redo - hidden on mobile */}
+        <div className="hidden sm:flex items-center gap-0.5">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button 
@@ -187,10 +206,10 @@ export function Toolbar({
           </Tooltip>
         </div>
 
-        <Separator orientation="vertical" className="h-6 mx-1" />
+        <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
 
         {/* Export with size options */}
-        <div className="flex items-center">
+        <div className="flex items-center shrink-0">
           <Button size="sm" className="h-8 rounded-r-none" onClick={() => onDownload()}>
             <Download className="w-4 h-4" />
           </Button>
@@ -230,7 +249,7 @@ export function Toolbar({
       {/* Secondary Toolbar - Eraser Options */}
       <div 
         className={cn(
-          "flex items-center gap-3 bg-card backdrop-blur-xl rounded-xl px-4 py-2 shadow-lg shadow-black/5 border border-border",
+          "flex items-center gap-3 bg-card/95 backdrop-blur-xl rounded-xl px-4 py-2 shadow-lg shadow-black/5 border border-border",
           "transition-all duration-300 ease-out",
           tool === 'eraser' 
             ? "opacity-100 translate-y-0" 
@@ -238,14 +257,14 @@ export function Toolbar({
         )}
       >
         <Eraser className="w-4 h-4 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">Brush size</span>
+        <span className="text-xs text-muted-foreground hidden sm:inline">Brush size</span>
         <Slider
           value={[brushSize]}
           onValueChange={([v]: number[]) => setBrushSize(v)}
           min={5}
           max={100}
           step={1}
-          className="w-32"
+          className="w-24 sm:w-32"
         />
         <span className="text-xs w-8 text-right font-mono">{brushSize}px</span>
       </div>

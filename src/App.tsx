@@ -1,7 +1,7 @@
 import { Dropzone } from '@/components/Dropzone';
 import { Editor } from '@/components/Editor';
 import { AppSidebar } from '@/components/AppSidebar';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { useStore } from '@/store/useStore';
 
 function App() {
@@ -44,7 +44,6 @@ function App() {
         >
           1h12.com
         </a>
-        <SidebarTrigger />
         {selectedItem && selectedItem.status === 'completed' ? (
           <Editor
             key={selectedLayerId || selectedItem.id}
@@ -77,51 +76,54 @@ function App() {
             </div>
           </div>
         ) : (
-          <div className="flex-1 h-full flex flex-col items-center justify-center p-8">
-            <div className="max-w-2xl text-center space-y-6">
-              <div className="space-y-3">
+          <div className="flex-1 h-full flex flex-col items-center justify-center p-4 sm:p-8 overflow-auto">
+            <div className="max-w-2xl text-center space-y-4 sm:space-y-6">
+              {/* Hero */}
+              <div className="space-y-2 sm:space-y-3">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                   Chroma Key Tool
                 </div>
-                <h2 className="text-2xl font-bold tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
                   Turn AI generations into <span className="text-primary">transparent PNGs</span>
                 </h2>
-                <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
-                  Remove colored backgrounds instantly with chroma key. Perfect for cleaning up AI-generated images.
+                <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed max-w-md mx-auto">
+                  Remove colored backgrounds instantly with chroma key.
                 </p>
               </div>
 
-              <div className="flex items-stretch justify-center gap-6">
-                <div className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-muted/30 flex-1 max-w-[180px]">
-                  <div className="w-24 h-24 rounded-xl bg-muted/50 flex items-center justify-center overflow-hidden">
+              {/* Steps - responsive grid */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-6">
+                <div className="flex flex-col items-center gap-2 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-muted/30">
+                  <div className="w-14 h-14 sm:w-24 sm:h-24 rounded-lg sm:rounded-xl bg-muted/50 flex items-center justify-center overflow-hidden">
                     <img src="/steps/step1.png" alt="Step 1" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-medium">1. Import</p>
-                    <p className="text-xs text-muted-foreground">Drop your image</p>
+                    <p className="text-xs sm:text-sm font-medium">1. Import</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Drop your image</p>
                   </div>
                 </div>
-                <div className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-muted/30 flex-1 max-w-[180px]">
-                  <div className="w-24 h-24 rounded-xl bg-muted/50 flex items-center justify-center overflow-hidden">
+                <div className="flex flex-col items-center gap-2 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-muted/30">
+                  <div className="w-14 h-14 sm:w-24 sm:h-24 rounded-lg sm:rounded-xl bg-muted/50 flex items-center justify-center overflow-hidden">
                     <img src="/steps/step2.png" alt="Step 2" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-medium">2. Chroma</p>
-                    <p className="text-xs text-muted-foreground">Remove background</p>
+                    <p className="text-xs sm:text-sm font-medium">2. Chroma</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Remove background</p>
                   </div>
                 </div>
-                <div className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-muted/30 flex-1 max-w-[180px]">
-                  <div className="w-24 h-24 rounded-xl bg-muted/50 flex items-center justify-center overflow-hidden checkerboard">
+                <div className="flex flex-col items-center gap-2 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-muted/30">
+                  <div className="w-14 h-14 sm:w-24 sm:h-24 rounded-lg sm:rounded-xl bg-muted/50 flex items-center justify-center overflow-hidden checkerboard">
                     <img src="/steps/step3.png" alt="Step 3" className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-medium">3. Export</p>
-                    <p className="text-xs text-muted-foreground">Transparent PNG</p>
+                    <p className="text-xs sm:text-sm font-medium">3. Export</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Transparent PNG</p>
                   </div>
                 </div>
               </div>
 
+              {/* Dropzone */}
               <Dropzone onDrop={addFiles} compact={false} />
             </div>
           </div>
