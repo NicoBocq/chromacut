@@ -3,7 +3,8 @@ import type React from 'react';
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Layers } from 'lucide-react';
-import * as Popover from '@radix-ui/react-popover';
+
+
 import { Button } from '@/components/ui/button';
 import { Toolbar } from '@/components/Toolbar';
 import { useStore, type ChromaSettings } from '@/store/useStore';
@@ -289,6 +290,7 @@ export function Editor({
           pushHistory(newUrl);
         }
         setCrop(undefined);
+        setCompletedCrop(undefined);
       }
     }, 'image/png');
   };
@@ -361,6 +363,7 @@ export function Editor({
         onDownload={handleDownload}
         exportSizes={exportSizes}
         imageDimensions={imageDimensions}
+        isLayer={isLayer}
       />
       
       {/* Canvas Area */}
@@ -417,14 +420,14 @@ export function Editor({
           ) : (
             <div className="relative">
               <div 
-                className="relative shadow-2xl rounded-xl overflow-hidden ring-1 ring-border/50 transition-transform duration-200"
+                className="relative shadow-2xl rounded-xl ring-1 ring-border/50 transition-transform duration-200"
                 style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center' }}
               >
                 <ReactCrop
                   crop={crop}
                   onChange={(_: PixelCrop, percentCrop: Crop) => setCrop(percentCrop)}
                   onComplete={(c: PixelCrop) => setCompletedCrop(c)}
-                  className="block"
+                  className="block rounded-xl overflow-hidden"
                 >
                   <img
                     ref={imgRef}
@@ -433,38 +436,28 @@ export function Editor({
                     className="max-w-full max-h-[70vh] block"
                   />
                 </ReactCrop>
-
-                {/* Floating Create Layer button with collision detection */}
-                {completedCrop && completedCrop.width > 0 && completedCrop.height > 0 && (
-                  <Popover.Root open>
-                    <Popover.Anchor 
-                      className="absolute"
-                      style={{
-                        left: `${completedCrop.x + completedCrop.width / 2}px`,
-                        top: `${completedCrop.y + completedCrop.height}px`,
-                      }}
-                    />
-                    <Popover.Portal>
-                      <Popover.Content
-                        side="bottom"
-                        align="center"
-                        sideOffset={8}
-                        collisionPadding={16}
-                        className="z-50"
-                      >
-                        <Button
-                          size="sm"
-                          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg whitespace-nowrap transition-all duration-200"
-                          onClick={applyCrop}
-                        >
-                          <Layers className="w-3.5 h-3.5 mr-1.5" />
-                          {isLayer ? 'Update' : 'Create Layer'}
-                        </Button>
-                      </Popover.Content>
-                    </Popover.Portal>
-                  </Popover.Root>
-                )}
               </div>
+
+              {/* Floating Create Layer button - outside the overflow container */}
+              {completedCrop && completedCrop.width > 0 && completedCrop.height > 0 && (
+                <div
+                  className="absolute z-50 pointer-events-auto"
+                  style={{
+                    left: completedCrop.x + completedCrop.width / 2,
+                    top: completedCrop.y + completedCrop.height + 8,
+                    transform: 'translateX(-50%)',
+                  }}
+                >
+                  <Button
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg whitespace-nowrap"
+                    onClick={applyCrop}
+                  >
+                    <Layers className="w-3.5 h-3.5 mr-1.5" />
+                    {isLayer ? 'Update' : 'Create Layer'}
+                  </Button>
+                </div>
+              )}
               {/* Dimensions - outside zoom, fixed size */}
               {imageDimensions && (
                 <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-10">

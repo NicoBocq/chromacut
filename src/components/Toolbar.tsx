@@ -1,7 +1,18 @@
-import { Download, Undo2, Redo2, Eraser, Crop as CropIcon, ZoomIn, ZoomOut, Pipette, ChevronDown, PanelLeftOpen, PanelLeftClose } from 'lucide-react';
+import {
+  ChevronDown,
+  Crop as CropIcon,
+  Download,
+  Eraser,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Pipette,
+  Redo2,
+  Undo2,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import {
   DropdownMenu,
@@ -40,6 +51,7 @@ interface ToolbarProps {
   onDownload: (scale?: number, targetSize?: number) => void;
   exportSizes: ExportSize[];
   imageDimensions: { width: number; height: number } | null;
+  isLayer?: boolean;
 }
 
 export function Toolbar({
@@ -59,6 +71,7 @@ export function Toolbar({
   onDownload,
   exportSizes,
   imageDimensions,
+  isLayer = false,
 }: ToolbarProps) {
   const { toggleSidebar, open } = useSidebar();
 
@@ -67,39 +80,29 @@ export function Toolbar({
       {/* Main Toolbar */}
       <div className="inline-flex items-center gap-1 bg-card/95 backdrop-blur-xl rounded-2xl p-2 shadow-lg shadow-black/5 border border-border">
         {/* Sidebar toggle */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 shrink-0"
-              onClick={toggleSidebar}
-            >
-              {open ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{open ? 'Hide sidebar' : 'Show sidebar'}</TooltipContent>
-        </Tooltip>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 shrink-0"
+          onClick={toggleSidebar}
+        >
+          {open ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
+        </Button>
 
         <Separator orientation="vertical" className="h-6 mx-1" />
 
-        {/* Chroma Key Settings */}
-        <div className="flex items-center gap-2 px-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5">
-                <Pipette className="w-3.5 h-3.5 text-muted-foreground hidden sm:block" />
-                <ColorPicker 
-                  value={chromaSettings.color} 
-                  onChange={(color) => {
-                    onChromaSettingsChange({ color });
-                    onApplyChroma();
-                  }} 
-                />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>Chroma key color</TooltipContent>
-          </Tooltip>
+        {/* Chroma Key Settings - disabled for layers */}
+        <div className={cn("flex items-center gap-2 px-2", isLayer && "opacity-40 pointer-events-none")}>
+          <div className="flex items-center gap-1.5">
+            <Pipette className="w-3.5 h-3.5 text-muted-foreground hidden sm:block" />
+            <ColorPicker 
+              value={chromaSettings.color} 
+              onChange={(color) => {
+                onChromaSettingsChange({ color });
+                onApplyChroma();
+              }} 
+            />
+          </div>
           
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground hidden sm:inline">Tol</span>
@@ -111,6 +114,7 @@ export function Toolbar({
               max={200}
               step={1}
               className="w-16 sm:w-20"
+              disabled={isLayer}
             />
             <span className="text-xs w-6 text-right font-mono">{chromaSettings.tolerance}</span>
           </div>
@@ -120,90 +124,60 @@ export function Toolbar({
 
         {/* Tool Selection */}
         <div className="flex gap-0.5 bg-secondary rounded-md p-0.5">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={tool === 'crop' ? 'default' : 'ghost'}
-                size="sm"
-                className={cn("h-8 w-8 p-0", tool === 'crop' && "bg-primary")}
-                onClick={() => setTool('crop')}
-              >
-                <CropIcon className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Crop</TooltipContent>
-          </Tooltip>
+          <Button
+            variant={tool === 'crop' ? 'default' : 'ghost'}
+            size="sm"
+            className={cn("h-8 w-8 p-0", tool === 'crop' && "bg-primary")}
+            onClick={() => setTool('crop')}
+          >
+            <CropIcon className="w-4 h-4" />
+          </Button>
           
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={tool === 'eraser' ? 'default' : 'ghost'}
-                size="sm"
-                className={cn("h-8 w-8 p-0", tool === 'eraser' && "bg-primary")}
-                onClick={() => setTool('eraser')}
-              >
-                <Eraser className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Eraser</TooltipContent>
-          </Tooltip>
+          <Button
+            variant={tool === 'eraser' ? 'default' : 'ghost'}
+            size="sm"
+            className={cn("h-8 w-8 p-0", tool === 'eraser' && "bg-primary")}
+            onClick={() => setTool('eraser')}
+          >
+            <Eraser className="w-4 h-4" />
+          </Button>
         </div>
 
         <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
 
         {/* Zoom - hidden on mobile */}
         <div className="hidden sm:flex items-center gap-1">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setZoom(Math.max(10, zoom - 25))}>
-                <ZoomOut className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Zoom out</TooltipContent>
-          </Tooltip>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setZoom(Math.max(10, zoom - 25))}>
+            <ZoomOut className="w-4 h-4" />
+          </Button>
           <span className="text-xs w-10 text-center">{zoom}%</span>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setZoom(Math.min(400, zoom + 25))}>
-                <ZoomIn className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Zoom in</TooltipContent>
-          </Tooltip>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setZoom(Math.min(400, zoom + 25))}>
+            <ZoomIn className="w-4 h-4" />
+          </Button>
         </div>
 
         <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
 
         {/* Undo/Redo - hidden on mobile */}
         <div className="hidden sm:flex items-center gap-0.5">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 w-8 p-0" 
-                onClick={onUndo}
-                disabled={!canUndo}
-              >
-                <Undo2 className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Undo (⌘Z)</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 w-8 p-0" 
-                onClick={onRedo}
-                disabled={!canRedo}
-              >
-                <Redo2 className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Redo (⌘⇧Z)</TooltipContent>
-          </Tooltip>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 w-8 p-0" 
+            onClick={onUndo}
+            disabled={!canUndo}
+          >
+            <Undo2 className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 w-8 p-0" 
+            onClick={onRedo}
+            disabled={!canRedo}
+          >
+            <Redo2 className="w-4 h-4" />
+          </Button>
         </div>
 
         <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />

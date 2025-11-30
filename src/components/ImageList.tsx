@@ -1,6 +1,5 @@
-/** biome-ignore-all lint/a11y/useSemanticElements: <find a better way> */
 import { useState } from 'react';
-import { Trash2, Layers, ChevronRight } from 'lucide-react';
+import { ChevronRight, Layers, Pencil, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useStore, type ImageItem } from '@/store/useStore';
@@ -15,14 +14,14 @@ interface ImageListProps {
   onRenameLayer: (itemId: string, layerId: string, name: string) => void;
 }
 
-export function ImageList({ 
-  items, 
-  selectedId, 
-  selectedLayerId, 
+export function ImageList({
+  items,
+  selectedId,
+  selectedLayerId,
   onSelectItem,
   onDeleteItem,
   onDeleteLayer,
-  onRenameLayer
+  onRenameLayer,
 }: ImageListProps) {
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -44,167 +43,184 @@ export function ImageList({
     return null;
   }
 
-  // Get display name without extension
   const getDisplayName = (fileName: string | undefined) => {
     if (!fileName) return 'Untitled';
     return fileName.replace(/\.[^/.]+$/, '');
   };
 
   return (
-    <div className="space-y-1 px-2">
+    <ul className="flex w-full min-w-0 flex-col gap-1 px-2">
       {items.map((item) => {
         const isSelected = selectedId === item.id && !selectedLayerId;
         const isExpanded = expandedItems.has(item.id);
         const hasLayers = item.layers.length > 0;
 
         return (
-          <div key={item.id} className="space-y-0.5">
-            {/* Main Item */}
-            <div
-              className={cn(
-                "group flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-all w-full",
-                isSelected 
-                  ? "bg-primary/15 ring-1 ring-primary/30" 
-                  : "hover:bg-muted/50"
-              )}
-              onClick={() => onSelectItem(item.id, null)}
-              onKeyDown={(e) => { if (e.key === 'Enter') onSelectItem(item.id, null); }}
-              role="button"
-              tabIndex={0}
-            >
-              {/* Expand toggle */}
-              {hasLayers ? (
-                <span
-                  onClick={(e) => { e.stopPropagation(); toggleExpandItem(item.id); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); toggleExpandItem(item.id); } }}
-                  className="p-0.5 hover:bg-muted rounded cursor-pointer"
-                  role="button"
-                  tabIndex={0}
+          <li key={item.id} className="group/item">
+            {/* Main Item wrapper */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => onSelectItem(item.id, null)}
+                className={cn(
+                  'flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors',
+                  isSelected
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : 'hover:bg-sidebar-accent/50'
+                )}
+              >
+                {/* Expand toggle */}
+                {hasLayers ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExpandItem(item.id);
+                    }}
+                    className="p-0.5 hover:bg-muted rounded cursor-pointer"
+                  >
+                    <ChevronRight
+                      className={cn(
+                        'w-3.5 h-3.5 text-muted-foreground transition-transform',
+                        isExpanded && 'rotate-90'
+                      )}
+                    />
+                  </button>
+                ) : (
+                  <div className="w-4.5" />
+                )}
+
+                {/* Thumbnail */}
+                <div
+                  className={cn(
+                    'w-10 h-10 rounded-lg overflow-hidden shrink-0 checkerboard',
+                    isSelected ? 'ring-2 ring-primary/50' : 'ring-1 ring-border/50'
+                  )}
                 >
-                  <ChevronRight className={cn(
-                    "w-3.5 h-3.5 text-muted-foreground transition-transform",
-                    isExpanded && "rotate-90"
-                  )} />
-                </span>
-              ) : (
-                <div className="w-4.5" />
-              )}
+                  <img
+                    src={item.processedUrl || item.originalUrl}
+                    alt={item.file?.name || 'Sprite'}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
 
-              {/* Thumbnail */}
-              <div className={cn(
-                "w-10 h-10 rounded-lg overflow-hidden shrink-0 checkerboard",
-                isSelected ? "ring-2 ring-primary/50" : "ring-1 ring-border/50"
-              )}>
-                <img 
-                  src={item.processedUrl || item.originalUrl} 
-                  alt={item.file?.name || 'Sprite'}
-                  className="w-full h-full object-contain"
-                />
-              </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0 overflow-hidden pr-6">
+                  <p className={cn('text-sm font-medium truncate', isSelected && 'text-primary')}>
+                    {getDisplayName(item.file?.name)}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {hasLayers ? `${item.layers.length} layer${item.layers.length > 1 ? 's' : ''}` : 'Source'}
+                  </p>
+                </div>
+              </button>
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <p className={cn(
-                  "text-sm font-medium truncate",
-                  isSelected && "text-primary"
-                )}>
-                  {getDisplayName(item.file?.name)}
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  {hasLayers ? `${item.layers.length} layer${item.layers.length > 1 ? 's' : ''}` : 'Source'}
-                </p>
-              </div>
-
-              {/* Delete */}
+              {/* Delete button - always visible on mobile, hover on desktop */}
               {!item.isDefault && (
-                <span
-                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-muted rounded cursor-pointer"
-                  onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); onDeleteItem(item.id); } }}
-                  role="button"
-                  tabIndex={0}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteItem(item.id);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center rounded-md hover:bg-muted opacity-100 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity"
                 >
-                  <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
-                </span>
+                  <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                </button>
               )}
             </div>
 
             {/* Layers */}
             {hasLayers && isExpanded && (
-              <div className="ml-6 pl-2 border-l border-border/50 space-y-0.5">
+              <ul className="ml-6 mt-1 pl-2 border-l border-border/50 space-y-0.5">
                 {item.layers.map((layer) => {
                   const isLayerSelected = selectedId === item.id && selectedLayerId === layer.id;
 
                   return (
-                    <div
-                      key={layer.id}
-                      className={cn(
-                        "group flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer transition-all w-full",
-                        isLayerSelected 
-                          ? "bg-primary/10 ring-1 ring-primary/20" 
-                          : "hover:bg-muted/40"
-                      )}
-                      onClick={() => onSelectItem(item.id, layer.id)}
-                      onDoubleClick={(e) => { e.stopPropagation(); startEditing(layer.id, layer.name); }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') onSelectItem(item.id, layer.id); }}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <Layers className={cn(
-                        "w-3.5 h-3.5 shrink-0",
-                        isLayerSelected ? "text-primary" : "text-muted-foreground"
-                      )} />
-
-                      {/* Thumbnail */}
-                      <div className="w-7 h-7 rounded overflow-hidden shrink-0 checkerboard ring-1 ring-border/30">
-                        <img 
-                          src={layer.url} 
-                          alt={layer.name}
-                          className="w-full h-full object-contain"
+                    <li key={layer.id} className="group/layer relative">
+                      <button
+                        type="button"
+                        onClick={() => onSelectItem(item.id, layer.id)}
+                        onDoubleClick={(e) => {
+                          e.stopPropagation();
+                          startEditing(layer.id, layer.name);
+                        }}
+                        className={cn(
+                          'flex w-full items-center gap-2 rounded-md px-2 py-1 text-left transition-colors',
+                          isLayerSelected
+                            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                            : 'hover:bg-sidebar-accent/50'
+                        )}
+                      >
+                        <Layers
+                          className={cn(
+                            'w-3.5 h-3.5 shrink-0',
+                            isLayerSelected ? 'text-primary' : 'text-muted-foreground'
+                          )}
                         />
-                      </div>
 
-                      {/* Name */}
-                      {editingLayerId === layer.id ? (
-                        <Input
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          onBlur={() => finishEditing(item.id, layer.id)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') finishEditing(item.id, layer.id);
-                            if (e.key === 'Escape') setEditingLayerId(null);
-                          }}
-                          className="h-6 text-xs flex-1"
-                          autoFocus
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      ) : (
-                        <span className={cn(
-                          "text-xs truncate flex-1",
-                          isLayerSelected ? "text-primary font-medium" : "text-foreground"
-                        )}>
-                          {layer.name}
-                        </span>
-                      )}
+                        {/* Thumbnail */}
+                        <div className="w-7 h-7 rounded overflow-hidden shrink-0 checkerboard ring-1 ring-border/30">
+                          <img src={layer.url} alt={layer.name} className="w-full h-full object-contain" />
+                        </div>
 
-                      {/* Delete */}
-                      <span
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-muted rounded cursor-pointer"
-                        onClick={(e) => { e.stopPropagation(); onDeleteLayer(item.id, layer.id); }}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); onDeleteLayer(item.id, layer.id); } }}
-                        role="button"
-                        tabIndex={0}
+                        {/* Name */}
+                        {editingLayerId === layer.id ? (
+                          <Input
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            onBlur={() => finishEditing(item.id, layer.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') finishEditing(item.id, layer.id);
+                              if (e.key === 'Escape') setEditingLayerId(null);
+                            }}
+                            className="h-6 text-xs flex-1"
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span
+                            className={cn(
+                              'text-xs truncate flex-1 pr-12',
+                              isLayerSelected ? 'text-primary font-medium' : 'text-foreground'
+                            )}
+                          >
+                            {layer.name}
+                          </span>
+                        )}
+                      </button>
+
+                      {/* Edit layer button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startEditing(layer.id, layer.name);
+                        }}
+                        className="absolute right-7 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center rounded hover:bg-muted opacity-100 sm:opacity-0 sm:group-hover/layer:opacity-100 transition-opacity"
+                      >
+                        <Pencil className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                      </button>
+
+                      {/* Delete layer button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteLayer(item.id, layer.id);
+                        }}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center rounded hover:bg-muted opacity-100 sm:opacity-0 sm:group-hover/layer:opacity-100 transition-opacity"
                       >
                         <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
-                      </span>
-                    </div>
+                      </button>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             )}
-          </div>
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 }

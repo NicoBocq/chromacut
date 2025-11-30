@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Pipette } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 interface ColorPickerProps {
@@ -62,8 +61,7 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
         <div className="space-y-3">
           {/* Eyedropper button */}
           {isEyeDropperSupported && (
-            <Tooltip>
-              <TooltipTrigger asChild>
+  
                 <Button
                   variant="outline"
                   size="sm"
@@ -74,10 +72,7 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
                   <Pipette className="w-4 h-4 mr-2" />
                   {isPicking ? 'Picking...' : 'Pick from screen'}
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>Click then select any color on screen</TooltipContent>
-            </Tooltip>
-          )}
+           )}
 
           {/* Preset colors */}
           <div className="grid grid-cols-4 gap-2">
