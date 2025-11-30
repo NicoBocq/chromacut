@@ -77,9 +77,7 @@ export function Toolbar({
 
 	return (
 		<div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 max-w-[calc(100%-2rem)]">
-			{/* Main Toolbar */}
 			<div className="inline-flex items-center gap-1 bg-card/95 backdrop-blur-xl rounded-2xl p-2 shadow-lg shadow-black/5 border border-border">
-				{/* Sidebar toggle */}
 				<Button
 					variant="ghost"
 					size="sm"
@@ -95,7 +93,6 @@ export function Toolbar({
 
 				<Separator orientation="vertical" className="h-6 mx-1" />
 
-				{/* Chroma Key Settings - disabled for layers */}
 				<div
 					className={cn(
 						"flex items-center gap-2 px-2",
@@ -140,7 +137,6 @@ export function Toolbar({
 					className="h-6 mx-1 hidden sm:block"
 				/>
 
-				{/* Tool Selection */}
 				<div className="flex gap-0.5 bg-secondary rounded-md p-0.5">
 					<Button
 						variant={tool === "crop" ? "default" : "ghost"}
@@ -166,7 +162,6 @@ export function Toolbar({
 					className="h-6 mx-1 hidden sm:block"
 				/>
 
-				{/* Zoom - hidden on mobile */}
 				<div className="hidden sm:flex items-center gap-1">
 					<Button
 						variant="ghost"
@@ -192,7 +187,6 @@ export function Toolbar({
 					className="h-6 mx-1 hidden sm:block"
 				/>
 
-				{/* Undo/Redo - hidden on mobile */}
 				<div className="hidden sm:flex items-center gap-0.5">
 					<Button
 						variant="ghost"
@@ -219,7 +213,6 @@ export function Toolbar({
 					className="h-6 mx-1 hidden sm:block"
 				/>
 
-				{/* Export with size options */}
 				<div className="flex items-center shrink-0">
 					<Button
 						size="sm"
@@ -265,7 +258,6 @@ export function Toolbar({
 				</div>
 			</div>
 
-			{/* Secondary Toolbar - Eraser Options */}
 			<div
 				className={cn(
 					"flex items-center gap-3 bg-card/95 backdrop-blur-xl rounded-xl px-4 py-2 shadow-lg shadow-black/5 border border-border",

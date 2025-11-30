@@ -17,7 +17,7 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
 				g: parseInt(result[2], 16),
 				b: parseInt(result[3], 16),
 			}
-		: { r: 0, g: 255, b: 0 }; // default green
+		: { r: 0, g: 255, b: 0 };
 }
 
 export async function removeColorBackground(
@@ -48,7 +48,6 @@ export async function removeColorBackground(
 			const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 			const data = imageData.data;
 
-			// Pre-calculate squared tolerance to avoid sqrt in loop
 			const toleranceSquared = tolerance * tolerance;
 			const tr = targetColor.r;
 			const tg = targetColor.g;
@@ -59,7 +58,6 @@ export async function removeColorBackground(
 				const dg = data[i + 1] - tg;
 				const db = data[i + 2] - tb;
 
-				// Compare squared distances (faster than sqrt)
 				if (dr * dr + dg * dg + db * db <= toleranceSquared) {
 					data[i + 3] = 0;
 				}
@@ -114,7 +112,6 @@ export async function removeColorFromUrl(
 			const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 			const data = imageData.data;
 
-			// Pre-calculate squared tolerance to avoid sqrt in loop
 			const toleranceSquared = tolerance * tolerance;
 			const tr = targetColor.r;
 			const tg = targetColor.g;
@@ -125,7 +122,6 @@ export async function removeColorFromUrl(
 				const dg = data[i + 1] - tg;
 				const db = data[i + 2] - tb;
 
-				// Compare squared distances (faster than sqrt)
 				if (dr * dr + dg * dg + db * db <= toleranceSquared) {
 					data[i + 3] = 0;
 				}

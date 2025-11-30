@@ -39,7 +39,6 @@ interface Store {
 	editorSettings: EditorSettings;
 	expandedItems: Set<string>;
 
-	// Actions
 	addFiles: (files: File[]) => void;
 	removeItem: (id: string) => void;
 	selectItem: (id: string, layerId?: string | null) => void;
@@ -117,17 +116,14 @@ export const useStore = create<Store>((set, get) => ({
 		const item = state.items.find((i) => i.id === id);
 		if (!item) return;
 
-		// Don't set processing status to avoid flicker - keep showing current image
 		const oldUrl = item.processedUrl;
 
 		try {
-			// Use file if available, otherwise process from URL (for default image)
 			const blob = item.file
 				? await removeColorBackground(item.file, get().chromaSettings)
 				: await removeColorFromUrl(item.originalUrl, get().chromaSettings);
 			const url = URL.createObjectURL(blob);
 
-			// Only update once new image is ready
 			set((state) => ({
 				items: state.items.map((i) =>
 					i.id === id
@@ -136,7 +132,6 @@ export const useStore = create<Store>((set, get) => ({
 				),
 			}));
 
-			// Revoke old URL after update to free memory
 			if (oldUrl && oldUrl !== item.originalUrl) {
 				URL.revokeObjectURL(oldUrl);
 			}
@@ -170,7 +165,7 @@ export const useStore = create<Store>((set, get) => ({
 
 		set((state) => {
 			const newExpanded = new Set(state.expandedItems);
-			newExpanded.add(itemId); // Expand the item to show new layer
+			newExpanded.add(itemId);
 			return {
 				items: state.items.map((item) =>
 					item.id === itemId
