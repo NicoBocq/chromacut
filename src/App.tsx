@@ -58,6 +58,16 @@ function App() {
 		}
 	};
 
+	const handleOutputChange = (dataUrl: string) => {
+		if (!selectedItem || selectedLayerId) return;
+		fetch(dataUrl)
+			.then((res) => res.blob())
+			.then((blob) => {
+				const url = URL.createObjectURL(blob);
+				updateItemProcessedUrl(selectedItem.id, url);
+			});
+	};
+
 	return (
 		<SidebarProvider>
 			<AppSidebar />
@@ -95,6 +105,7 @@ function App() {
 								: selectedItem.file?.name || "generated.png"
 						}
 						onSave={handleSave}
+						onOutputChange={handleOutputChange}
 						isLayer={!!selectedLayerId}
 						chromaSettings={chromaSettings}
 						onChromaSettingsChange={updateChromaSettings}

@@ -41,6 +41,7 @@ interface Store {
 	editorSettings: EditorSettings;
 	expandedItems: Set<string>;
 	isAIProcessing: boolean;
+	canvasDataUrl: string | null;
 
 	addFiles: (files: File[]) => void;
 	removeItem: (id: string) => void;
@@ -57,6 +58,7 @@ interface Store {
 	expandItem: (id: string) => void;
 	updateItemProcessedUrl: (id: string, url: string) => void;
 	setIsAIProcessing: (value: boolean) => void;
+	setCanvasDataUrl: (url: string | null) => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(7);
@@ -77,6 +79,7 @@ export const useStore = create<Store>((set, get) => ({
 	},
 	expandedItems: new Set<string>(),
 	isAIProcessing: false,
+	canvasDataUrl: null,
 
 	addFiles: (files) => {
 		const newItems = files.map((file) => ({
@@ -274,5 +277,9 @@ export const useStore = create<Store>((set, get) => ({
 
 	setIsAIProcessing: (value) => {
 		set({ isAIProcessing: value });
+	},
+
+	setCanvasDataUrl: (url) => {
+		set({ canvasDataUrl: url });
 	},
 }));

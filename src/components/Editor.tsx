@@ -9,6 +9,7 @@ interface EditorProps {
 	imageUrl: string;
 	fileName: string;
 	onSave?: (blob: Blob) => void;
+	onOutputChange?: (dataUrl: string) => void;
 	isLayer?: boolean;
 	chromaSettings: ChromaSettings;
 	onChromaSettingsChange: (settings: Partial<ChromaSettings>) => void;
@@ -21,6 +22,7 @@ export function Editor({
 	imageUrl,
 	fileName,
 	onSave,
+	onOutputChange,
 	isLayer,
 	chromaSettings,
 	onChromaSettingsChange,
@@ -31,7 +33,16 @@ export function Editor({
 	const { editorSettings, updateEditorSettings } = useStore();
 	const { tool, zoom, brushSize } = editorSettings;
 
-	const setTool = (t: typeof tool) => updateEditorSettings({ tool: t });
+	const setTool = (t: typeof tool) => {
+		// Si on quitte l'eraser, sauvegarder l'état du canvas
+		if (tool === "eraser" && t !== "eraser" && canvasRef.current) {
+			const dataUrl = canvasRef.current.toDataURL("image/png");
+			setOutputUrl(dataUrl);
+			// Notifier le parent pour persister dans le store
+			onOutputChange?.(dataUrl);
+		}
+		updateEditorSettings({ tool: t });
+	};
 	const setZoom = (z: number) => updateEditorSettings({ zoom: z });
 	const setBrushSize = (s: number) => updateEditorSettings({ brushSize: s });
 
