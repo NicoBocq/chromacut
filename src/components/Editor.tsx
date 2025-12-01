@@ -2,9 +2,7 @@ import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-import { Layers } from "lucide-react";
 import { Toolbar } from "@/components/Toolbar";
-import { Button } from "@/components/ui/button";
 import { type ChromaSettings, useStore } from "@/store/useStore";
 
 interface EditorProps {
@@ -391,6 +389,10 @@ export function Editor({
 				exportSizes={exportSizes}
 				imageDimensions={imageDimensions}
 				isLayer={isLayer}
+				hasCropSelection={
+					!!completedCrop && completedCrop.width > 0 && completedCrop.height > 0
+				}
+				onApplyCrop={applyCrop}
 			/>
 
 			<div className="flex-1 overflow-auto no-scrollbar checkerboard flex items-center justify-center p-8">
@@ -470,27 +472,6 @@ export function Editor({
 								</ReactCrop>
 							</div>
 
-							{completedCrop &&
-								completedCrop.width > 0 &&
-								completedCrop.height > 0 && (
-									<div
-										className="absolute z-50 pointer-events-auto"
-										style={{
-											left: completedCrop.x + completedCrop.width / 2,
-											top: completedCrop.y + completedCrop.height + 8,
-											transform: "translateX(-50%)",
-										}}
-									>
-										<Button
-											size="sm"
-											className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg whitespace-nowrap"
-											onClick={applyCrop}
-										>
-											<Layers className="w-3.5 h-3.5 mr-1.5" />
-											{isLayer ? "Update" : "Create Layer"}
-										</Button>
-									</div>
-								)}
 							{imageDimensions && (
 								<div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-10">
 									<span className="text-xs font-mono text-foreground/60 bg-background/80 backdrop-blur-sm px-2 py-1 rounded border border-border/50 shadow-sm whitespace-nowrap">

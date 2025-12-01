@@ -3,6 +3,7 @@ import {
 	Crop as CropIcon,
 	Download,
 	Eraser,
+	Layers,
 	PanelLeftClose,
 	PanelLeftOpen,
 	Pipette,
@@ -52,6 +53,8 @@ interface ToolbarProps {
 	exportSizes: ExportSize[];
 	imageDimensions: { width: number; height: number } | null;
 	isLayer?: boolean;
+	hasCropSelection?: boolean;
+	onApplyCrop?: () => void;
 }
 
 export function Toolbar({
@@ -72,6 +75,8 @@ export function Toolbar({
 	exportSizes,
 	imageDimensions,
 	isLayer = false,
+	hasCropSelection = false,
+	onApplyCrop,
 }: ToolbarProps) {
 	const { toggleSidebar, open } = useSidebar();
 
@@ -258,29 +263,34 @@ export function Toolbar({
 				</div>
 			</div>
 
-			<div
-				className={cn(
-					"flex items-center gap-3 bg-card/95 backdrop-blur-xl rounded-xl px-4 py-2 shadow-lg shadow-black/5 border border-border",
-					"transition-all duration-300 ease-out",
-					tool === "eraser"
-						? "opacity-100 translate-y-0"
-						: "opacity-0 -translate-y-2 pointer-events-none",
-				)}
-			>
-				<Eraser className="w-4 h-4 text-muted-foreground" />
-				<span className="text-xs text-muted-foreground hidden sm:inline">
-					Brush size
-				</span>
-				<Slider
-					value={[brushSize]}
-					onValueChange={([v]: number[]) => setBrushSize(v)}
-					min={5}
-					max={100}
-					step={1}
-					className="w-24 sm:w-32"
-				/>
-				<span className="text-xs w-8 text-right font-mono">{brushSize}px</span>
-			</div>
+			{tool === "eraser" && (
+				<div className="flex items-center gap-3 bg-card/95 backdrop-blur-xl rounded-xl px-4 py-2 shadow-lg shadow-black/5 border border-border">
+					<Eraser className="w-4 h-4 text-muted-foreground" />
+					<span className="text-xs text-muted-foreground hidden sm:inline">
+						Brush size
+					</span>
+					<Slider
+						value={[brushSize]}
+						onValueChange={([v]: number[]) => setBrushSize(v)}
+						min={5}
+						max={100}
+						step={1}
+						className="w-24 sm:w-32"
+					/>
+					<span className="text-xs w-8 text-right font-mono">
+						{brushSize}px
+					</span>
+				</div>
+			)}
+
+			{tool === "crop" && hasCropSelection && (
+				<div className="flex items-center bg-card/95 backdrop-blur-xl rounded-xl px-4 py-2 shadow-lg shadow-black/5 border border-border">
+					<Button size="sm" onClick={onApplyCrop}>
+						<Layers className="w-4 h-4 mr-1.5" />
+						{isLayer ? "Update" : "Create Layer"}
+					</Button>
+				</div>
+			)}
 		</div>
 	);
 }
