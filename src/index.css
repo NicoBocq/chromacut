@@ -194,3 +194,35 @@
 .ReactCrop__child-wrapper img {
   vertical-align: top;
 }
+
+/* AI button shimmer border */
+@keyframes shimmer-border {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.ai-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-shimmer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--primary) 50%,
+    transparent 100%
+  );
+  background-size: 300% 100%;
+  animation: shimmer-border 6s ease-in-out infinite;
+  opacity: 0.5;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+}
