@@ -9,6 +9,7 @@ Remove colored backgrounds from AI-generated images with chroma key.
 ## Features
 
 - 🎨 **Chroma key** - Remove any color background with adjustable tolerance
+- ✨ **AI background removal** - One-click intelligent background removal powered by ML
 - ✂️ **Crop & trim** - Auto-trim transparent pixels when cropping
 - 🧹 **Eraser** - Manual touch-up with adjustable brush size
 - 📚 **Layers** - Save multiple crops as separate layers
