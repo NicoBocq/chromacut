@@ -1,4 +1,4 @@
-import { ChevronRight, Layers, Pencil, Trash2 } from "lucide-react";
+import { ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -162,16 +162,7 @@ export function ImageList({
 														: "hover:bg-sidebar-accent/50",
 												)}
 											>
-												<Layers
-													className={cn(
-														"w-3.5 h-3.5 shrink-0",
-														isLayerSelected
-															? "text-primary"
-															: "text-muted-foreground",
-													)}
-												/>
-
-												<div className="w-7 h-7 rounded overflow-hidden shrink-0 checkerboard ring-1 ring-border/30">
+												<div className="w-7 h-7 rounded-lg overflow-hidden shrink-0 checkerboard ring-1 ring-border/30">
 													<img
 														src={layer.url}
 														alt={layer.name}
