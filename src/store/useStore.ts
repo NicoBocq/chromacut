@@ -24,11 +24,13 @@ export interface ChromaSettings {
 }
 
 export type Tool = "crop" | "eraser";
+export type BgRemovalMode = "chroma" | "ai";
 
 export interface EditorSettings {
 	tool: Tool;
 	zoom: number;
 	brushSize: number;
+	bgRemovalMode: BgRemovalMode;
 }
 
 interface Store {
@@ -38,6 +40,7 @@ interface Store {
 	chromaSettings: ChromaSettings;
 	editorSettings: EditorSettings;
 	expandedItems: Set<string>;
+	isAIProcessing: boolean;
 
 	addFiles: (files: File[]) => void;
 	removeItem: (id: string) => void;
@@ -52,6 +55,8 @@ interface Store {
 	updateEditorSettings: (settings: Partial<EditorSettings>) => void;
 	toggleExpandItem: (id: string) => void;
 	expandItem: (id: string) => void;
+	updateItemProcessedUrl: (id: string, url: string) => void;
+	setIsAIProcessing: (value: boolean) => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(7);
@@ -68,8 +73,10 @@ export const useStore = create<Store>((set, get) => ({
 		tool: "crop",
 		zoom: 100,
 		brushSize: 20,
+		bgRemovalMode: "chroma",
 	},
 	expandedItems: new Set<string>(),
+	isAIProcessing: false,
 
 	addFiles: (files) => {
 		const newItems = files.map((file) => ({
@@ -255,5 +262,17 @@ export const useStore = create<Store>((set, get) => ({
 			newExpanded.add(id);
 			return { expandedItems: newExpanded };
 		});
+	},
+
+	updateItemProcessedUrl: (id, url) => {
+		set((state) => ({
+			items: state.items.map((i) =>
+				i.id === id ? { ...i, processedUrl: url } : i,
+			),
+		}));
+	},
+
+	setIsAIProcessing: (value) => {
+		set({ isAIProcessing: value });
 	},
 }));

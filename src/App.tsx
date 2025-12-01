@@ -2,6 +2,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Dropzone } from "@/components/Dropzone";
 import { Editor } from "@/components/Editor";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { removeBackgroundAI } from "@/lib/processor";
 import { useStore } from "@/store/useStore";
 
 function App() {
@@ -10,12 +11,36 @@ function App() {
 		selectedId,
 		selectedLayerId,
 		chromaSettings,
+		isAIProcessing,
 		addFiles,
 		addLayer,
 		updateLayer,
 		processItem,
 		updateChromaSettings,
+		updateItemProcessedUrl,
+		setIsAIProcessing,
 	} = useStore();
+
+	const handleApplyAI = async (itemId: string) => {
+		const item = useStore.getState().items.find((i) => i.id === itemId);
+		if (!item) return;
+
+		setIsAIProcessing(true);
+
+		// Use setTimeout to let React render the loading state before heavy processing
+		await new Promise((r) => setTimeout(r, 50));
+
+		try {
+			const source = item.file || item.originalUrl;
+			const blob = await removeBackgroundAI(source);
+			const url = URL.createObjectURL(blob);
+			updateItemProcessedUrl(itemId, url);
+		} catch (err) {
+			console.error("AI error:", err);
+		} finally {
+			setIsAIProcessing(false);
+		}
+	};
 
 	const selectedItem = items.find((i) => i.id === selectedId);
 	const selectedLayer = selectedItem?.layers.find(
@@ -37,7 +62,17 @@ function App() {
 		<SidebarProvider>
 			<AppSidebar />
 			<SidebarInset className="bg-canvas relative">
-				{/* Credit link */}
+				{isAIProcessing && (
+					<div className="fixed inset-0 z-100 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+						<div className="text-center space-y-4">
+							<div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+							<p className="text-sm font-medium">Removing background...</p>
+							<p className="text-xs text-muted-foreground">
+								This may take a few seconds
+							</p>
+						</div>
+					</div>
+				)}
 				<a
 					href="https://1h12.com"
 					target="_blank"
@@ -64,6 +99,8 @@ function App() {
 						chromaSettings={chromaSettings}
 						onChromaSettingsChange={updateChromaSettings}
 						onApplyChroma={() => processItem(selectedItem.id)}
+						onApplyAI={() => handleApplyAI(selectedItem.id)}
+						isAIProcessing={isAIProcessing}
 					/>
 				) : selectedItem ? (
 					<div className="flex-1 h-full flex items-center justify-center">
@@ -118,7 +155,6 @@ function App() {
 								</p>
 							</div>
 
-							{/* Steps - responsive grid */}
 							<div className="grid grid-cols-3 gap-2 sm:gap-6">
 								<div className="flex flex-col items-center gap-2 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-muted/30">
 									<div className="w-14 h-14 sm:w-24 sm:h-24 rounded-lg sm:rounded-xl bg-muted/50 flex items-center justify-center overflow-hidden">
@@ -176,7 +212,6 @@ function App() {
 								</div>
 							</div>
 
-							{/* Dropzone */}
 							<Dropzone onDrop={addFiles} compact={false} />
 						</div>
 					</div>

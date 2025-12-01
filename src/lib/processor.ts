@@ -146,10 +146,9 @@ export async function removeColorFromUrl(
 	});
 }
 
-// Legacy function for backward compatibility
-export async function removeGreenBackground(
-	file: File,
-	tolerance: number = 50,
+export async function removeBackgroundAI(
+	imageSource: File | string,
 ): Promise<Blob> {
-	return removeColorBackground(file, { color: "#00ff00", tolerance });
+	const { removeBackground } = await import("@imgly/background-removal");
+	return await removeBackground(imageSource);
 }

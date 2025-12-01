@@ -6,8 +6,8 @@ import {
 	Layers,
 	PanelLeftClose,
 	PanelLeftOpen,
-	Pipette,
 	Redo2,
+	Sparkles,
 	Undo2,
 	ZoomIn,
 	ZoomOut,
@@ -42,9 +42,12 @@ interface ToolbarProps {
 	setBrushSize: (size: number) => void;
 	zoom: number;
 	setZoom: (zoom: number) => void;
+
 	chromaSettings: ChromaSettings;
 	onChromaSettingsChange: (settings: Partial<ChromaSettings>) => void;
 	onApplyChroma: () => void;
+	onApplyAI: () => void;
+	isAIProcessing?: boolean;
 	onUndo: () => void;
 	onRedo: () => void;
 	canUndo: boolean;
@@ -64,9 +67,12 @@ export function Toolbar({
 	setBrushSize,
 	zoom,
 	setZoom,
+
 	chromaSettings,
 	onChromaSettingsChange,
 	onApplyChroma,
+	onApplyAI,
+	isAIProcessing = false,
 	onUndo,
 	onRedo,
 	canUndo,
@@ -100,41 +106,39 @@ export function Toolbar({
 
 				<div
 					className={cn(
-						"flex items-center gap-2 px-2",
+						"flex items-center gap-2",
 						isLayer && "opacity-40 pointer-events-none",
 					)}
 				>
-					<div className="flex items-center gap-1.5">
-						<Pipette className="w-3.5 h-3.5 text-muted-foreground hidden sm:block" />
-						<ColorPicker
-							value={chromaSettings.color}
-							onChange={(color) => {
-								onChromaSettingsChange({ color });
-								onApplyChroma();
-							}}
-						/>
-					</div>
-
-					<div className="flex items-center gap-2">
-						<span className="text-xs text-muted-foreground hidden sm:inline">
-							Tol
-						</span>
-						<Slider
-							value={[chromaSettings.tolerance]}
-							onValueChange={([v]: number[]) =>
-								onChromaSettingsChange({ tolerance: v })
-							}
-							onValueCommit={() => onApplyChroma()}
-							min={0}
-							max={200}
-							step={1}
-							className="w-16 sm:w-20"
-							disabled={isLayer}
-						/>
-						<span className="text-xs w-6 text-right font-mono">
-							{chromaSettings.tolerance}
-						</span>
-					</div>
+					<ColorPicker
+						value={chromaSettings.color}
+						onChange={(color) => {
+							onChromaSettingsChange({ color });
+							onApplyChroma();
+						}}
+					/>
+					<Slider
+						value={[chromaSettings.tolerance]}
+						onValueChange={([v]: number[]) =>
+							onChromaSettingsChange({ tolerance: v })
+						}
+						onValueCommit={() => onApplyChroma()}
+						min={0}
+						max={200}
+						step={1}
+						className="w-16 sm:w-24"
+						disabled={isLayer}
+					/>
+					<Button
+						variant="outline"
+						size="sm"
+						className="h-8 border-primary/30 hover:bg-primary/10 ai-shimmer"
+						onClick={onApplyAI}
+						disabled={isAIProcessing || isLayer}
+					>
+						<Sparkles className="w-4 h-4 sm:mr-1.5 text-primary" />
+						<span className="hidden sm:inline">AI</span>
+					</Button>
 				</div>
 
 				<Separator

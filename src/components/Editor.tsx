@@ -13,6 +13,8 @@ interface EditorProps {
 	chromaSettings: ChromaSettings;
 	onChromaSettingsChange: (settings: Partial<ChromaSettings>) => void;
 	onApplyChroma: () => void;
+	onApplyAI: () => void;
+	isAIProcessing: boolean;
 }
 
 export function Editor({
@@ -23,6 +25,8 @@ export function Editor({
 	chromaSettings,
 	onChromaSettingsChange,
 	onApplyChroma,
+	onApplyAI,
+	isAIProcessing,
 }: EditorProps) {
 	const { editorSettings, updateEditorSettings } = useStore();
 	const { tool, zoom, brushSize } = editorSettings;
@@ -87,7 +91,7 @@ export function Editor({
 		}
 	};
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: pushHistory is stable (uses state setters only)
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <no need>
 	useEffect(() => {
 		const isNewFile = prevFileNameRef.current !== fileName;
 		if (isNewFile) {
@@ -381,6 +385,8 @@ export function Editor({
 				chromaSettings={chromaSettings}
 				onChromaSettingsChange={onChromaSettingsChange}
 				onApplyChroma={onApplyChroma}
+				onApplyAI={onApplyAI}
+				isAIProcessing={isAIProcessing}
 				onUndo={handleUndo}
 				onRedo={handleRedo}
 				canUndo={canUndo}
