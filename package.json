@@ -13,7 +13,7 @@
 		"prepare": "husky"
 	},
 	"lint-staged": {
-		"*.{js,ts,tsx,json,css,md}": "biome check --write"
+		"*.{js,ts,tsx,json}": "biome check --write"
 	},
 	"dependencies": {
 		"@imgly/background-removal": "^1.7.0",
