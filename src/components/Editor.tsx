@@ -146,6 +146,17 @@ export function Editor({
 		};
 	}, [tool, outputUrl]);
 
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape" && (crop || completedCrop)) {
+				setCrop(undefined);
+				setCompletedCrop(undefined);
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [crop, completedCrop]);
+
 	const exportSizes = [
 		{ label: "Original", scale: 1 },
 		{ label: "2x", scale: 2 },
@@ -418,7 +429,7 @@ export function Editor({
 						<div className="relative">
 							<div
 								role="application"
-								className="relative shadow-2xl rounded-xl overflow-hidden ring-1 ring-border/50 transition-transform duration-200"
+								className="relative shadow-2xl overflow-hidden ring-1 ring-border/50 transition-transform duration-200"
 								style={{
 									transform: `scale(${zoom / 100})`,
 									transformOrigin: "center",
@@ -432,11 +443,15 @@ export function Editor({
 									onMouseUp={stopErasing}
 									onMouseLeave={stopErasing}
 									onMouseMove={(e) => {
-										if (cursorRef.current) {
+										if (cursorRef.current && canvasRef.current) {
 											const rect = e.currentTarget.getBoundingClientRect();
 											const x = e.clientX - rect.left;
 											const y = e.clientY - rect.top;
-											cursorRef.current.style.transform = `translate(${x - brushSize / 2}px, ${y - brushSize / 2}px)`;
+											const scale = rect.width / canvasRef.current.width;
+											const cursorSize = brushSize * scale;
+											cursorRef.current.style.width = `${cursorSize}px`;
+											cursorRef.current.style.height = `${cursorSize}px`;
+											cursorRef.current.style.transform = `translate(${x - cursorSize / 2}px, ${y - cursorSize / 2}px)`;
 										}
 										handleEraseMove(e);
 									}}
@@ -449,8 +464,6 @@ export function Editor({
 									ref={cursorRef}
 									className="pointer-events-none absolute top-0 left-0 border-2 border-primary bg-primary/20 rounded-full"
 									style={{
-										width: brushSize,
-										height: brushSize,
 										opacity: showCursor ? 1 : 0,
 									}}
 								/>
@@ -466,7 +479,7 @@ export function Editor({
 					) : (
 						<div className="relative">
 							<div
-								className="relative shadow-2xl rounded-xl ring-1 ring-border/50 transition-transform duration-200"
+								className="relative shadow-2xl ring-1 ring-border/50 transition-transform duration-200"
 								style={{
 									transform: `scale(${zoom / 100})`,
 									transformOrigin: "center",
@@ -478,7 +491,7 @@ export function Editor({
 										setCrop(percentCrop)
 									}
 									onComplete={(c: PixelCrop) => setCompletedCrop(c)}
-									className="block rounded-xl overflow-hidden"
+									className="block overflow-hidden"
 								>
 									<img
 										ref={imgRef}
