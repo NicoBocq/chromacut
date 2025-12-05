@@ -6,9 +6,7 @@ import {
 	Layers,
 	PanelLeftClose,
 	PanelLeftOpen,
-	Redo2,
 	Sparkles,
-	Undo2,
 	ZoomIn,
 	ZoomOut,
 } from "lucide-react";
@@ -48,10 +46,6 @@ interface ToolbarProps {
 	onApplyChroma: () => void;
 	onApplyAI: () => void;
 	isAIProcessing?: boolean;
-	onUndo: () => void;
-	onRedo: () => void;
-	canUndo: boolean;
-	canRedo: boolean;
 	onDownload: (scale?: number, targetSize?: number) => void;
 	exportSizes: ExportSize[];
 	imageDimensions: { width: number; height: number } | null;
@@ -73,10 +67,6 @@ export function Toolbar({
 	onApplyChroma,
 	onApplyAI,
 	isAIProcessing = false,
-	onUndo,
-	onRedo,
-	canUndo,
-	canRedo,
 	onDownload,
 	exportSizes,
 	imageDimensions,
@@ -189,32 +179,6 @@ export function Toolbar({
 						onClick={() => setZoom(Math.min(400, zoom + 25))}
 					>
 						<ZoomIn className="w-4 h-4" />
-					</Button>
-				</div>
-
-				<Separator
-					orientation="vertical"
-					className="h-6 mx-1 hidden sm:block"
-				/>
-
-				<div className="hidden sm:flex items-center gap-0.5">
-					<Button
-						variant="ghost"
-						size="sm"
-						className="h-8 w-8 p-0"
-						onClick={onUndo}
-						disabled={!canUndo}
-					>
-						<Undo2 className="w-4 h-4" />
-					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						className="h-8 w-8 p-0"
-						onClick={onRedo}
-						disabled={!canRedo}
-					>
-						<Redo2 className="w-4 h-4" />
 					</Button>
 				</div>
 

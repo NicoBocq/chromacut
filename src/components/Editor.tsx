@@ -56,80 +56,24 @@ export function Editor({
 		height: number;
 	} | null>(null);
 
-	const [history, setHistory] = useState<string[]>([imageUrl]);
-	const [historyIndex, setHistoryIndex] = useState(0);
-	const maxHistory = 10;
-
-	const canUndo = historyIndex > 0;
-	const canRedo = historyIndex < history.length - 1;
-
 	const exportName = fileName.replace(/\.[^/.]+$/, "");
 
 	const imgRef = useRef<HTMLImageElement>(null);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const cursorRef = useRef<HTMLDivElement>(null);
 	const prevFileNameRef = useRef(fileName);
-	const historyRef = useRef(history);
-	historyRef.current = history;
 
-	const pushHistory = (url: string) => {
-		setHistory((prev) => {
-			const newHistory = prev.slice(0, historyIndex + 1);
-			newHistory.push(url);
-			if (newHistory.length > maxHistory) {
-				URL.revokeObjectURL(newHistory[0]);
-				newHistory.shift();
-				return newHistory;
-			}
-			return newHistory;
-		});
-		setHistoryIndex((prev) => Math.min(prev + 1, maxHistory - 1));
-	};
-
-	const handleUndo = () => {
-		if (canUndo) {
-			const newIndex = historyIndex - 1;
-			setHistoryIndex(newIndex);
-			setOutputUrl(history[newIndex]);
-		}
-	};
-
-	const handleRedo = () => {
-		if (canRedo) {
-			const newIndex = historyIndex + 1;
-			setHistoryIndex(newIndex);
-			setOutputUrl(history[newIndex]);
-		}
-	};
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <no need>
 	useEffect(() => {
 		const isNewFile = prevFileNameRef.current !== fileName;
 		if (isNewFile) {
 			setOutputUrl(imageUrl);
 			setCrop(undefined);
 			setCompletedCrop(undefined);
-			setHistory([imageUrl]);
-			setHistoryIndex(0);
 			prevFileNameRef.current = fileName;
 		} else if (imageUrl !== outputUrl) {
-			const currentHistoryUrl = historyRef.current[historyIndex];
-			if (imageUrl !== currentHistoryUrl) {
-				setOutputUrl(imageUrl);
-				pushHistory(imageUrl);
-			}
+			setOutputUrl(imageUrl);
 		}
-	}, [imageUrl, fileName, historyIndex, outputUrl]);
-
-	useEffect(() => {
-		return () => {
-			for (const url of historyRef.current) {
-				if (url !== imageUrl && url.startsWith("blob:")) {
-					URL.revokeObjectURL(url);
-				}
-			}
-		};
-	}, [imageUrl]);
+	}, [imageUrl, fileName, outputUrl]);
 
 	useEffect(() => {
 		const img = new Image();
@@ -326,7 +270,6 @@ export function Editor({
 				} else {
 					const newUrl = URL.createObjectURL(blob);
 					setOutputUrl(newUrl);
-					pushHistory(newUrl);
 				}
 				setCrop(undefined);
 				setCompletedCrop(undefined);
@@ -380,7 +323,6 @@ export function Editor({
 					} else {
 						const newUrl = URL.createObjectURL(blob);
 						setOutputUrl(newUrl);
-						pushHistory(newUrl);
 					}
 				}
 			}, "image/png");
@@ -410,10 +352,6 @@ export function Editor({
 					onApplyChroma={onApplyChroma}
 					onApplyAI={onApplyAI}
 					isAIProcessing={isAIProcessing}
-					onUndo={handleUndo}
-					onRedo={handleRedo}
-					canUndo={canUndo}
-					canRedo={canRedo}
 					onDownload={handleDownload}
 					exportSizes={exportSizes}
 					imageDimensions={imageDimensions}
