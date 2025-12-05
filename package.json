@@ -1,7 +1,31 @@
 {
 	"name": "chromacut",
+	"version": "0.1.12",
+	"description": "Chroma key tool to turn AI generations into transparent PNGs",
+	"author": {
+		"name": "Nicolas Bocquet",
+		"email": "nicolas.fow@gmail.com",
+		"url": "https://1h12.com"
+	},
+	"license": "MIT",
+	"homepage": "https://chromacut.1h12.com",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/NicoBocq/chromacut"
+	},
+	"bugs": {
+		"url": "https://github.com/NicoBocq/chromacut/issues"
+	},
+	"keywords": [
+		"chroma-key",
+		"background-removal",
+		"transparent-png",
+		"image-editor",
+		"ai-images",
+		"react",
+		"vite"
+	],
 	"private": true,
-	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
