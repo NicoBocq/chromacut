@@ -396,121 +396,135 @@ export function Editor({
 	};
 
 	return (
-		<div className="flex flex-col h-full bg-canvas relative">
-			<Toolbar
-				tool={tool}
-				setTool={setTool}
-				brushSize={brushSize}
-				setBrushSize={setBrushSize}
-				zoom={zoom}
-				setZoom={setZoom}
-				chromaSettings={chromaSettings}
-				onChromaSettingsChange={onChromaSettingsChange}
-				onApplyChroma={onApplyChroma}
-				onApplyAI={onApplyAI}
-				isAIProcessing={isAIProcessing}
-				onUndo={handleUndo}
-				onRedo={handleRedo}
-				canUndo={canUndo}
-				canRedo={canRedo}
-				onDownload={handleDownload}
-				exportSizes={exportSizes}
-				imageDimensions={imageDimensions}
-				isLayer={isLayer}
-				hasCropSelection={
-					!!completedCrop && completedCrop.width > 0 && completedCrop.height > 0
-				}
-				onApplyCrop={applyCrop}
-			/>
+		<div className="h-full bg-canvas relative overflow-hidden">
+			<div className="absolute inset-0 pointer-events-none z-30">
+				<Toolbar
+					tool={tool}
+					setTool={setTool}
+					brushSize={brushSize}
+					setBrushSize={setBrushSize}
+					zoom={zoom}
+					setZoom={setZoom}
+					chromaSettings={chromaSettings}
+					onChromaSettingsChange={onChromaSettingsChange}
+					onApplyChroma={onApplyChroma}
+					onApplyAI={onApplyAI}
+					isAIProcessing={isAIProcessing}
+					onUndo={handleUndo}
+					onRedo={handleRedo}
+					canUndo={canUndo}
+					canRedo={canRedo}
+					onDownload={handleDownload}
+					exportSizes={exportSizes}
+					imageDimensions={imageDimensions}
+					isLayer={isLayer}
+					hasCropSelection={
+						!!completedCrop &&
+						completedCrop.width > 0 &&
+						completedCrop.height > 0
+					}
+					onApplyCrop={applyCrop}
+				/>
+			</div>
 
-			<div className="flex-1 overflow-auto no-scrollbar checkerboard flex items-center justify-center p-8">
-				{imageUrl &&
-					(tool === "eraser" ? (
-						<div className="relative">
-							<div
-								role="application"
-								className="relative shadow-2xl overflow-hidden ring-1 ring-border/50 transition-transform duration-200"
-								style={{
-									transform: `scale(${zoom / 100})`,
-									transformOrigin: "center",
-								}}
-								onMouseEnter={() => setShowCursor(true)}
-								onMouseLeave={() => setShowCursor(false)}
-							>
-								<canvas
-									ref={canvasRef}
-									onMouseDown={startErasing}
-									onMouseUp={stopErasing}
-									onMouseLeave={stopErasing}
-									onMouseMove={(e) => {
-										if (cursorRef.current && canvasRef.current) {
-											const rect = e.currentTarget.getBoundingClientRect();
-											const x = e.clientX - rect.left;
-											const y = e.clientY - rect.top;
-											const scale = rect.width / canvasRef.current.width;
-											const cursorSize = brushSize * scale;
-											cursorRef.current.style.width = `${cursorSize}px`;
-											cursorRef.current.style.height = `${cursorSize}px`;
-											cursorRef.current.style.transform = `translate(${x - cursorSize / 2}px, ${y - cursorSize / 2}px)`;
-										}
-										handleEraseMove(e);
-									}}
-									onTouchStart={startErasing}
-									onTouchEnd={stopErasing}
-									onTouchMove={handleEraseMove}
-									className="max-w-full max-h-[70vh] cursor-none touch-none block"
-								/>
+			<div className="absolute inset-0 overflow-auto checkerboard">
+				<div
+					className="inline-flex items-center justify-center p-8"
+					style={{ minWidth: "100%", minHeight: "100%" }}
+				>
+					{imageUrl &&
+						(tool === "eraser" ? (
+							<div className="relative inline-block">
 								<div
-									ref={cursorRef}
-									className="pointer-events-none absolute top-0 left-0 border-2 border-primary bg-primary/20 rounded-full"
+									role="application"
+									className="relative shadow-2xl overflow-hidden ring-1 ring-border/50"
 									style={{
-										opacity: showCursor ? 1 : 0,
+										width: imageDimensions
+											? `${(imageDimensions.width * zoom) / 100}px`
+											: "auto",
+										height: imageDimensions
+											? `${(imageDimensions.height * zoom) / 100}px`
+											: "auto",
 									}}
-								/>
-							</div>
-							{imageDimensions && (
-								<div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-10">
-									<span className="text-xs font-mono text-foreground/60 bg-background/80 backdrop-blur-sm px-2 py-1 rounded border border-border/50 shadow-sm whitespace-nowrap">
-										{imageDimensions.width} × {imageDimensions.height}
-									</span>
-								</div>
-							)}
-						</div>
-					) : (
-						<div className="relative">
-							<div
-								className="relative shadow-2xl ring-1 ring-border/50 transition-transform duration-200"
-								style={{
-									transform: `scale(${zoom / 100})`,
-									transformOrigin: "center",
-								}}
-							>
-								<ReactCrop
-									crop={crop}
-									onChange={(_: PixelCrop, percentCrop: Crop) =>
-										setCrop(percentCrop)
-									}
-									onComplete={(c: PixelCrop) => setCompletedCrop(c)}
-									className="block overflow-hidden"
+									onMouseEnter={() => setShowCursor(true)}
+									onMouseLeave={() => setShowCursor(false)}
 								>
-									<img
-										ref={imgRef}
-										alt="Edit"
-										src={outputUrl}
-										className="max-w-full max-h-[70vh] block"
+									<canvas
+										ref={canvasRef}
+										onMouseDown={startErasing}
+										onMouseUp={stopErasing}
+										onMouseLeave={stopErasing}
+										onMouseMove={(e) => {
+											if (cursorRef.current && canvasRef.current) {
+												const rect = e.currentTarget.getBoundingClientRect();
+												const x = e.clientX - rect.left;
+												const y = e.clientY - rect.top;
+												const cursorSize = (brushSize * zoom) / 100;
+												cursorRef.current.style.width = `${cursorSize}px`;
+												cursorRef.current.style.height = `${cursorSize}px`;
+												cursorRef.current.style.transform = `translate(${x - cursorSize / 2}px, ${y - cursorSize / 2}px)`;
+											}
+											handleEraseMove(e);
+										}}
+										onTouchStart={startErasing}
+										onTouchEnd={stopErasing}
+										onTouchMove={handleEraseMove}
+										className="cursor-none touch-none block w-full h-full"
 									/>
-								</ReactCrop>
-							</div>
-
-							{imageDimensions && (
-								<div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-10">
-									<span className="text-xs font-mono text-foreground/60 bg-background/80 backdrop-blur-sm px-2 py-1 rounded border border-border/50 shadow-sm whitespace-nowrap">
-										{imageDimensions.width} × {imageDimensions.height}
-									</span>
+									<div
+										ref={cursorRef}
+										className="pointer-events-none absolute top-0 left-0 border-2 border-primary bg-primary/20 rounded-full"
+										style={{
+											opacity: showCursor ? 1 : 0,
+										}}
+									/>
 								</div>
-							)}
-						</div>
-					))}
+								{imageDimensions && (
+									<div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-10">
+										<span className="text-xs font-mono text-foreground/60 bg-background/80 backdrop-blur-sm px-2 py-1 rounded border border-border/50 shadow-sm whitespace-nowrap">
+											{imageDimensions.width} × {imageDimensions.height}
+										</span>
+									</div>
+								)}
+							</div>
+						) : (
+							<div className="relative inline-block">
+								<div
+									className="relative shadow-2xl ring-1 ring-border/50"
+									style={{
+										width: imageDimensions
+											? `${(imageDimensions.width * zoom) / 100}px`
+											: "auto",
+									}}
+								>
+									<ReactCrop
+										crop={crop}
+										onChange={(_: PixelCrop, percentCrop: Crop) =>
+											setCrop(percentCrop)
+										}
+										onComplete={(c: PixelCrop) => setCompletedCrop(c)}
+										className="block overflow-hidden"
+									>
+										<img
+											ref={imgRef}
+											alt="Edit"
+											src={outputUrl}
+											className="block w-full h-auto"
+											draggable={false}
+										/>
+									</ReactCrop>
+								</div>
+
+								{imageDimensions && (
+									<div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-10">
+										<span className="text-xs font-mono text-foreground/60 bg-background/80 backdrop-blur-sm px-2 py-1 rounded border border-border/50 shadow-sm whitespace-nowrap">
+											{imageDimensions.width} × {imageDimensions.height}
+										</span>
+									</div>
+								)}
+							</div>
+						))}
+				</div>
 			</div>
 		</div>
 	);

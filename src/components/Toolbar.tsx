@@ -87,8 +87,8 @@ export function Toolbar({
 	const { toggleSidebar, open } = useSidebar();
 
 	return (
-		<div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 max-w-[calc(100%-2rem)]">
-			<div className="inline-flex items-center gap-1 bg-card/95 backdrop-blur-xl rounded-2xl p-2 shadow-lg shadow-black/5 border border-border">
+		<div className="relative top-4 left-4 flex flex-col items-start gap-2 pointer-events-auto">
+			<div className="inline-flex items-center gap-1 bg-card/95 backdrop-blur-xl rounded-2xl p-2 shadow-lg shadow-black/5 border border-border max-w-[calc(100vw-2rem)]">
 				<Button
 					variant="ghost"
 					size="sm"
@@ -131,13 +131,14 @@ export function Toolbar({
 					/>
 					<Button
 						variant="outline"
-						size="sm"
+						size="icon"
 						className="h-8 border-primary/30 hover:bg-primary/10 ai-shimmer"
 						onClick={onApplyAI}
 						disabled={isAIProcessing || isLayer}
+						title="AI Crop"
 					>
-						<Sparkles className="w-4 h-4 sm:mr-1.5 text-primary" />
-						<span className="hidden sm:inline">AI</span>
+						<Sparkles className="w-4 h-4 text-primary" />
+						<span className="sr-only">AI Crop</span>
 					</Button>
 				</div>
 
